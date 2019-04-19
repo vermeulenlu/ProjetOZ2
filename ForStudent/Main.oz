@@ -183,11 +183,14 @@ define
 	 {Wait Res}
 	 {Send GUI_Port hidePlayer(ID)}
 	 case Res of death(NewLife) then
-	    {Send Player.port spawn(?ID2 ?Pos)}
-	    {Wait ID2}
-	    {Wait Pos}
-	    {Send GUI_Port spawnPlayer(ID2 Pos)}
-	    {Record.adjoin Player player(life:NewLife pos:Pos)}
+	    if(NewLife==0) then  {Record.adjoin Player player(life:NewLife)}
+	    else
+	       {Send Player.port spawn(?ID2 ?Pos)}
+	       {Wait ID2}
+	       {Wait Pos}
+	       {Send GUI_Port spawnPlayer(ID2 Pos)}
+	       {Record.adjoin Player player(life:NewLife pos:Pos)}
+	    end
 	 end
       end
    end
@@ -219,6 +222,10 @@ define
       NewTotalGameState={EliminatePlayers PointsToFire TotalGameState}
       {HideFiiire PointsToFire}
       NewPlayer={Record.adjoin Player player(bombtimeBeforeExplode:nil bombpos:nil)}
+      local Res in
+	 {Send NewPlayer.port add(bomb 1 Res)}
+	 {Wait Res}
+      end
       {Replace NewTotalGameState NewPlayer N 1}
    end
 
@@ -243,9 +250,11 @@ define
    
 
    fun{GetState Player}
-      if(Player.life>0) then on
-      else
-	 off
+      local ID State in
+	 {Send Player.port getState(?ID ?State)}
+	 {Wait ID}
+	 {Wait State}
+	 State
       end
    end
 
@@ -304,7 +313,11 @@ define
    fun{Run GameState}
       {Delay 500}
       case GameState of H|T then
-	 {OneTurn H}|{Run T}
+	 case {GetState H} of on then
+	    {OneTurn H}|{Run T}
+	 [] off then
+	    H|{Run T}
+	 end
       [] nil then nil
       end
    end   
@@ -316,7 +329,7 @@ define
       local NewGameState1 NewGameState2 in
 	 NewGameState1 = {UpdateBomb GameState GameState 1}
 	 NewGameState2 = {Run NewGameState1}
-	 {Print 'GAMESTATE : '#{Length NewGameState1 0}#''}
+	 {Print 'GAMESTATE : '#{SeeHowManyPlayers NewGameState2 0}#''}
 	 if({SeeHowManyPlayers NewGameState2 0} >1) then %% Le jeu comporte encore plus de un joueur
 	    {TurnByTurn NewGameState2}
 	 else
