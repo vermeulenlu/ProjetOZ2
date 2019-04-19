@@ -66,7 +66,7 @@ define
 
    fun{GenerateGameState List}
       case List of H|T then
-	 player(port:H  pos:_ bombpos:nil bombtimeBeforeExplode:nil idBomber:_)|{GenerateGameState T}
+	 player(port:H  pos:_ bombpos:nil bombtimeBeforeExplode:nil idBomber:_ life:Input.nbLives)|{GenerateGameState T}
       [] nil then nil
       end
    end
@@ -187,9 +187,8 @@ define
 	    {Wait ID2}
 	    {Wait Pos}
 	    {Send GUI_Port spawnPlayer(ID2 Pos)}
+	    {Record.adjoin Player player(life:NewLife pos:Pos)}
 	 end
-	 %{Print 'J AI FINI LE GOTHIT : '#NewLife#''}
-	 {Record.adjoin Player player(pos:Pos)}
       end
    end
       
@@ -210,18 +209,16 @@ define
    end
 	 
 
-   fun{Explode Player TotalGameState N} NewTotalGameState PosBomb IDBomb PointsToFire NewPlayer in
-      {Print 'JE SUIS DANS EXPLODE'}
+   fun{Explode Player TotalGameState N} NewTotalGameState PosBomb IDBomb PointsToFire NewPlayer R in
       PosBomb=Player.bombpos
       IDBomb=Player.idBomber
       PointsToFire = {Append {Append {Append {Check PosBomb.x PosBomb.y 0 1} {Check PosBomb.x PosBomb.y 0 ~1}} {Check PosBomb.x PosBomb.y 1 0}} {Check PosBomb.x PosBomb.y ~1 0}}
-      {Print 'J AI INITIALISE MES POINTSTOFIRE'}
       {Send GUI_Port hideBomb(Player.bombpos)}
       {Fiiire PointsToFire}
       {Delay 300}
       NewTotalGameState={EliminatePlayers PointsToFire TotalGameState}
       {HideFiiire PointsToFire}
-      NewPlayer={Record.adjoin Player player(bombtimeBeforeExplode:nil idBomber:nil bombpos:nil)}
+      NewPlayer={Record.adjoin Player player(bombtimeBeforeExplode:nil bombpos:nil)}
       {Replace NewTotalGameState NewPlayer N 1}
    end
 
@@ -246,11 +243,9 @@ define
    
 
    fun{GetState Player}
-      local ID State in
-	 {Send Player.port getState(?ID ?State)}
-	 {Wait ID}
-	 {Wait State}
-	 State
+      if(Player.life>0) then on
+      else
+	 off
       end
    end
 
@@ -261,7 +256,8 @@ define
 	 else
 	    if(H.bombtimeBeforeExplode == 0) then
 	       NewTotalGameState = {Explode H TotalGameState N}
-	       {Append {RetrieveListFirst NewTotalGameState N 0} {UpdateBomb {RetrieveListLast NewTotalGameState N 0} NewTotalGameState N+1}}
+	       NewGameState={Append {RetrieveListFirst NewTotalGameState N 0} {RetrieveListLast NewTotalGameState N 1}}
+	       {List.nth NewGameState N}|{UpdateBomb {RetrieveListLast NewGameState N 1} NewGameState N+1}
 	    else
 	       local P in
 		  P={Record.adjoin H player(bombtimeBeforeExplode:H.bombtimeBeforeExplode-1)}
@@ -281,7 +277,6 @@ define
 	 {Wait Action}
 	 case Action of move(Pos)
 	 then
-	    {Wait Pos}
 	    {Send GUI_Port movePlayer(ID Pos)}
 	    {Record.adjoin Player player(pos:Pos)}
 	 [] bomb(Pos) then
@@ -321,6 +316,7 @@ define
       local NewGameState1 NewGameState2 in
 	 NewGameState1 = {UpdateBomb GameState GameState 1}
 	 NewGameState2 = {Run NewGameState1}
+	 {Print 'GAMESTATE : '#{Length NewGameState1 0}#''}
 	 if({SeeHowManyPlayers NewGameState2 0} >1) then %% Le jeu comporte encore plus de un joueur
 	    {TurnByTurn NewGameState2}
 	 else
