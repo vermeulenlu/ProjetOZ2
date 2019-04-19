@@ -218,7 +218,7 @@ define
       PointsToFire = {Append {Append {Append {Check PosBomb.x PosBomb.y 0 1} {Check PosBomb.x PosBomb.y 0 ~1}} {Check PosBomb.x PosBomb.y 1 0}} {Check PosBomb.x PosBomb.y ~1 0}}
       {Send GUI_Port hideBomb(Player.bombpos)}
       {Fiiire PointsToFire}
-      {Delay 300}
+      {Delay 1000}
       NewTotalGameState={EliminatePlayers PointsToFire TotalGameState}
       {HideFiiire PointsToFire}
       NewPlayer={Record.adjoin Player player(bombtimeBeforeExplode:nil bombpos:nil)}
@@ -258,24 +258,19 @@ define
       end
    end
 
-   fun{UpdateBomb GameState TotalGameState N} NewGameState NewTotalGameState in 
-      case GameState of H|T then
-	 if(H.bombtimeBeforeExplode == nil) then
-	    H|{UpdateBomb T TotalGameState N+1}
+   fun{UpdateBomb Player TotalGameState N} NewTotalGameState in 
+      if(Player.bombtimeBeforeExplode == nil) then
+	 TotalGameState
+      else
+	 if(Player.bombtimeBeforeExplode == 0) then
+	    NewTotalGameState = {Explode Player TotalGameState N}
+	    {Append {RetrieveListFirst NewTotalGameState N 0} {RetrieveListLast NewTotalGameState N 1}}
 	 else
-	    if(H.bombtimeBeforeExplode == 0) then
-	       NewTotalGameState = {Explode H TotalGameState N}
-	       NewGameState={Append {RetrieveListFirst NewTotalGameState N 0} {RetrieveListLast NewTotalGameState N 1}}
-	       {List.nth NewGameState N}|{UpdateBomb {RetrieveListLast NewGameState N 1} NewGameState N+1}
-	    else
-	       local P in
-		  P={Record.adjoin H player(bombtimeBeforeExplode:H.bombtimeBeforeExplode-1)}
-		  NewTotalGameState = {Replace TotalGameState P N 1}
-		  P|{UpdateBomb T NewTotalGameState N+1}
-	       end
+	    local P in
+	       P={Record.adjoin Player player(bombtimeBeforeExplode:Player.bombtimeBeforeExplode-1)}
+	       {Replace TotalGameState P N 1}
 	    end
 	 end
-      [] nil then nil
       end
    end
 
@@ -310,13 +305,15 @@ define
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Input : Liste d'etat des joueurs %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%% Output : Nouvelle liste d'etat sans les joueurs elimines %%%%%%%%%%%%%%%%%
    
-   fun{Run GameState}
-      {Delay 500}
+   fun{Run GameState TotalGameState N} NewGameState in
+      {Delay 400}
       case GameState of H|T then
-	 case {GetState H} of on then
-	    {OneTurn H}|{Run T}
+	 NewGameState={UpdateBomb H TotalGameState N}
+	 {Delay 400}
+	 case {GetState {List.nth NewGameState N}} of on then
+	    {OneTurn {List.nth NewGameState N}}|{Run {RetrieveListLast NewGameState N 1} TotalGameState N+1}
 	 [] off then
-	    H|{Run T}
+	    {List.nth NewGameState N}|{Run {RetrieveListLast GameState N 1} TotalGameState N+1}
 	 end
       [] nil then nil
       end
@@ -326,12 +323,10 @@ define
 %%%%%%%%%%%%%% Input : Liste d'etat des joueurs %%%%%%%%%%%%
    
    proc{TurnByTurn GameState}
-      local NewGameState1 NewGameState2 in
-	 NewGameState1 = {UpdateBomb GameState GameState 1}
-	 NewGameState2 = {Run NewGameState1}
-	 {Print 'GAMESTATE : '#{SeeHowManyPlayers NewGameState2 0}#''}
-	 if({SeeHowManyPlayers NewGameState2 0} >1) then %% Le jeu comporte encore plus de un joueur
-	    {TurnByTurn NewGameState2}
+      local NewGameState in
+	 NewGameState = {Run GameState GameState 1}
+	 if({SeeHowManyPlayers NewGameState 0}>1) then %% Le jeu comporte encore plus de un joueur
+	    {TurnByTurn NewGameState}
 	 else
 	    skip %% Il faut afficher le vainqueur
 	 end
@@ -349,7 +344,7 @@ define
    ListID = {Ids Input.colorsBombers [lucas jerem] 1}
    ListBombers = {GenerateBombers Input.bombers ListID}
    {Initit ListBombers}
-   {Delay 3000}
+   {Delay 5000}
 %%%%%%%%%%%%%%%%%%%%%%%% On lance le jeu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    GameState = {GenerateGameState ListBombers}
    {TurnByTurn GameState}
