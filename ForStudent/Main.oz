@@ -14,7 +14,8 @@ define
    fun{Length List N}
       case List of H|T then
 	 {Length T N+1}
-      [] nil then N
+      else
+	 N
       end
    end
 
@@ -56,6 +57,26 @@ define
       end
    end
 
+   fun{CheckScore GameState Winner}
+      case GameState of H|T then
+	 if(H.score>Winner.score) then
+	    {CheckScore T H}
+	 else
+	    {CheckScore T Winner}
+	 end
+      [] nil then Winner
+      end
+   end
+
+   fun{CheckWinner GameState}
+      case GameState of H|T then
+	 case {GetState H} of on then H
+	 else
+	    {CheckWinner T}
+	 end
+      end
+   end
+
    
    fun{GenerateBombers List ID}
       case List#ID of (H1|T1)#(H2|T2) then
@@ -66,7 +87,7 @@ define
 
    fun{GenerateGameState List}
       case List of H|T then
-	 player(port:H  pos:_ bombpos:nil bombtimeBeforeExplode:nil idBomber:_ life:Input.nbLives)|{GenerateGameState T}
+	 player(port:H  pos:_ bombpos:nil bombtimeBeforeExplode:nil idBomber:_ life:Input.nbLives map:Input.map)|{GenerateGameState T}
       [] nil then nil
       end
    end
@@ -107,11 +128,52 @@ define
       end
    end
 
-   proc{Fiiire List}
-      case List of H|T then
+   fun{UpdateMapToPlayers GameState Map}
+      case GameState of H|T then
+	 {Record.adjoin H player(map:Map)}|{UpdateMapToPlayers T Map}
+      [] nil then nil
+      end
+   end
+
+   fun{UpdateMap NewMap Pos GameState} NewPlayer in
+      case GameState of H|T then
+	 NewPlayer={Record.adjoin H player(map:NewMap)}
+	 {Send NewPlayer.port info(boxRemoved(Pos))}
+	 NewPlayer|{UpdateMap NewMap Pos T}
+      [] nil then nil
+      end
+   end
+
+   fun{Fiiire Points Map Port GameState} NewGameState in
+      case Points of H|T then
 	 {Send GUI_Port spawnFire(H)}
-	 {Fiiire T}
-      [] nil then skip
+	 case {List.nth {List.nth Map H.y} H.x} of 2 then
+	    local Res ID NewMap in
+	       {Send GUI_Port hideBox(H)}
+	       {Send Port add(point 1 ?Res)}
+	       {Wait Res}
+	       {Send Port getId(?ID)}
+	       {Wait ID}
+	       {Send GUI_Port scoreUpdate(ID Res)}
+	       NewMap={Replace Map {Replace {List.nth Map H.y} 0 H.x 1} H.y 1}
+	       NewGameState={UpdateMap NewMap H GameState}
+	       {Fiiire T NewMap Port NewGameState}
+	    end
+	 [] 3 then
+	    local Res ID NewMap in
+	       {Send GUI_Port hideBox(H)}
+	       {Send Port add(bomb 1 ?Res)}
+	       {Wait Res}
+	       {Send Port getId(?ID)}
+	       {Wait ID}
+	       NewMap={Replace Map {Replace {List.nth Map H.y} 0 H.x 1} H.y 1}
+	       NewGameState={UpdateMap NewMap H GameState}
+	       {Fiiire T NewMap Port NewGameState}
+	    end
+	 else
+	    {Fiiire T Map Port GameState}
+	 end
+      [] nil then GameState
       end
    end
 
@@ -123,9 +185,9 @@ define
       end
    end
 
-   fun{Check X Y Xsup Ysup}
+   fun{Check X Y Xsup Ysup Player}
       fun{CheckLoop X Y Xsup Ysup N}
-	 local Res XFin YFin in
+	 local XFin YFin in
 	    if(Xsup<0) then XFin=X-1
 	    else
 	       XFin=(X)+(Xsup)
@@ -145,12 +207,12 @@ define
 	    elseif(N=<0) then
 	       nil
 	    else
-	       case {List.nth {List.nth Input.map Y+Ysup} X+Xsup} of 1 then
-		  nil
-	       [] 2 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1}
-	       [] 3 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1}
-	       [] 4 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1}
-	       [] 0 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1}
+	       case {List.nth {List.nth Player.map Y+Ysup} X+Xsup} of 1 then
+		  nil %% WALL
+	       [] 2 then pt(x:XFin y:YFin)|nil %% BOX WITH POINT
+	       [] 3 then pt(x:XFin y:YFin)|nil %% BOX WITH BONUS
+	       [] 4 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1} %% SPAWN
+	       [] 0 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1} %% SOL
 	       end
 	    end
 	 end
@@ -177,20 +239,25 @@ define
    end
 
    fun{GotHit Player}
-      local ID Res NewLife ID2 Pos in
+      local ID Res ID2 Pos in
 	 {Send Player.port gotHit(?ID ?Res)}
 	 {Wait ID}
 	 {Wait Res}
 	 {Send GUI_Port hidePlayer(ID)}
 	 case Res of death(NewLife) then
-	    if(NewLife==0) then  {Record.adjoin Player player(life:NewLife)}
+	    if(NewLife==0) then
+	       {Send GUI_Port lifeUpdate(ID NewLife)}
+	       {Record.adjoin Player player(life:NewLife)}
 	    else
 	       {Send Player.port spawn(?ID2 ?Pos)}
 	       {Wait ID2}
 	       {Wait Pos}
+	       {Send GUI_Port lifeUpdate(ID2 NewLife)}
 	       {Send GUI_Port spawnPlayer(ID2 Pos)}
 	       {Record.adjoin Player player(life:NewLife pos:Pos)}
 	    end
+	 else
+	    Player
 	 end
       end
    end
@@ -212,21 +279,22 @@ define
    end
 	 
 
-   fun{Explode Player TotalGameState N} NewTotalGameState PosBomb IDBomb PointsToFire NewPlayer R in
+   fun{Explode Player TotalGameState N} NewTotalGameState PosBomb IDBomb PointsToFire NewPlayer NewMap R in
       PosBomb=Player.bombpos
       IDBomb=Player.idBomber
-      PointsToFire = {Append {Append {Append {Check PosBomb.x PosBomb.y 0 1} {Check PosBomb.x PosBomb.y 0 ~1}} {Check PosBomb.x PosBomb.y 1 0}} {Check PosBomb.x PosBomb.y ~1 0}}
+      PointsToFire = {Append {Append {Append {Append {Check PosBomb.x PosBomb.y 0 1 Player} {Check PosBomb.x PosBomb.y 0 ~1 Player}} {Check PosBomb.x PosBomb.y 1 0 Player}} {Check PosBomb.x PosBomb.y ~1 0 Player}} [pt(x:PosBomb.x y:PosBomb.y)]}
       {Send GUI_Port hideBomb(Player.bombpos)}
-      {Fiiire PointsToFire}
+      NewMap={Fiiire PointsToFire Player.map Player.port TotalGameState}
       {Delay 1000}
-      NewTotalGameState={EliminatePlayers PointsToFire TotalGameState}
+      NewTotalGameState={EliminatePlayers PointsToFire NewMap}
       {HideFiiire PointsToFire}
-      NewPlayer={Record.adjoin Player player(bombtimeBeforeExplode:nil bombpos:nil)}
+      NewPlayer={Record.adjoin {List.nth NewTotalGameState N} player(bombtimeBeforeExplode:nil bombpos:nil)}
       local Res in
 	 {Send NewPlayer.port add(bomb 1 Res)}
 	 {Wait Res}
       end
-      {Replace NewTotalGameState NewPlayer N 1}
+      R={Replace NewTotalGameState NewPlayer N 1}
+      R
    end
 
    fun{SeeHowManyPlayers List N}
@@ -258,6 +326,8 @@ define
       end
    end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%% Fonction pour checker si une bombe doit exploser et ses MAJ %%%%%%%%%%%%%%%%%%%%%
+   
    fun{UpdateBomb Player TotalGameState N} NewTotalGameState in 
       if(Player.bombtimeBeforeExplode == nil) then
 	 TotalGameState
@@ -274,8 +344,10 @@ define
       end
    end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%% Action d un joueur : Move ou Bomb %%%%%%%%%%%%%%%%%%%%%
+   
    fun{MakeAction Player}
-      local ID Action Pos in
+      local ID Action in
 	 {Send Player.port doaction(ID Action)}
 	 {Wait ID}
 	 {Wait Action}
@@ -290,30 +362,29 @@ define
       end
    end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%% Boucle pour traiter un joueur %%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%% Input : Etat d'un joueur %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%% Output : Nouvel Etat du joueur apres Action %%%%%%%%%%%%%%%%%
-
-   fun{OneTurn Player}
-      local NewPlayer in
-	 NewPlayer={MakeAction Player}
-	 NewPlayer
-      end
-   end
    
 %%%%%%%%%%%%%%%%%%%%%%%%%% Boucle pour traiter la liste des joueurs %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Input : Liste d'etat des joueurs %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%% Output : Nouvelle liste d'etat sans les joueurs elimines %%%%%%%%%%%%%%%%%
    
-   fun{Run GameState TotalGameState N} NewGameState in
-      {Delay 400}
+   fun{Run GameState TotalGameState N} NewGameState R in
+      {Delay 220}
       case GameState of H|T then
+	 R=TotalGameState
+	 % {Print 'NEWMAP DU PLAYER1 : '#{List.nth R.1.map.2.1 4}#', NEWMAP DU PLAYER2 : '#{List.nth R.2.1.map.2.1 4}#''}
+	 % {Print 'NEWMAP DU PLAYER1 : '#{List.nth R.1.map.2.1 5}#', NEWMAP DU PLAYER2 : '#{List.nth R.2.1.map.2.1 5}#''}
+	 % {Print 'NEWMAP DU PLAYER1 : '#{List.nth R.1.map.2.2.1 2}#', NEWMAP DU PLAYER2 : '#{List.nth R.1.map.2.2.1 2}#''}
+	 % {Print 'NEWMAP DU PLAYER1 : '#{List.nth R.1.map.2.2.2.1 2}#', NEWMAP DU PLAYER2 : '#{List.nth R.1.map.2.2.2.1 2}#''}
 	 NewGameState={UpdateBomb H TotalGameState N}
-	 {Delay 400}
+	 % {Print 'NEWMAP DU PLAYER1AFTERBOMB : '#{List.nth NewGameState.1.map.2.1 4}#', NEWMAP DU PLAYER2AFTERBOMB : '#{List.nth NewGameState.2.1.map.2.1 4}#''}
+	 % {Print 'NEWMAP DU PLAYER1AFTERBOMB : '#{List.nth NewGameState.1.map.2.1 5}#', NEWMAP DU PLAYER2AFTERBOMB : '#{List.nth NewGameState.2.1.map.2.1 5}#''}
+	 % {Print 'NEWMAP DU PLAYER1AFTERBOMB : '#{List.nth NewGameState.1.map.2.2.1 2}#', NEWMAP DU PLAYER2AFTERBOMB : '#{List.nth NewGameState.1.map.2.2.1 2}#''}
+	 % {Print 'NEWMAP DU PLAYER1AFTERBOMB : '#{List.nth NewGameState.1.map.2.2.2.1 2}#', NEWMAP DU PLAYER2AFTERBOMB : '#{List.nth NewGameState.1.map.2.2.2.1 2}#''}
+	 {Delay 220}
 	 case {GetState {List.nth NewGameState N}} of on then
-	    {OneTurn {List.nth NewGameState N}}|{Run {RetrieveListLast NewGameState N 1} TotalGameState N+1}
+	    {MakeAction {List.nth NewGameState N}}|{Run {RetrieveListLast NewGameState N 1} NewGameState N+1}
 	 [] off then
-	    {List.nth NewGameState N}|{Run {RetrieveListLast GameState N 1} TotalGameState N+1}
+	    {List.nth NewGameState N}|{Run {RetrieveListLast NewGameState N 1} NewGameState N+1}
 	 end
       [] nil then nil
       end
@@ -323,12 +394,32 @@ define
 %%%%%%%%%%%%%% Input : Liste d'etat des joueurs %%%%%%%%%%%%
    
    proc{TurnByTurn GameState}
-      local NewGameState in
+      local NewGameState MapToUpdate NewState in
 	 NewGameState = {Run GameState GameState 1}
-	 if({SeeHowManyPlayers NewGameState 0}>1) then %% Le jeu comporte encore plus de un joueur
-	    {TurnByTurn NewGameState}
+	 MapToUpdate={List.nth NewGameState {Length NewGameState 0}}.map
+	 NewState={UpdateMapToPlayers NewGameState MapToUpdate}
+	 % {Print 'NEWMAP DU PLAYER1AFTERUPDATE : '#{List.nth NewState.1.map.2.1 4}#', NEWMAP DU PLAYER2AFTERUPDATE : '#{List.nth NewState.2.1.map.2.1 4}#''}
+	 % {Print 'NEWMAP DU PLAYER1AFTERUPDATE : '#{List.nth NewState.1.map.2.1 5}#', NEWMAP DU PLAYER2AFTERUPDATE : '#{List.nth NewState.2.1.map.2.1 5}#''}
+	 % {Print 'NEWMAP DU PLAYER1AFTERUPDATE : '#{List.nth NewState.1.map.2.2.1 2}#', NEWMAP DU PLAYER2AFTERUPDATE : '#{List.nth NewState.1.map.2.2.1 2}#''}
+	 % {Print 'NEWMAP DU PLAYER1AFTERUPDATE : '#{List.nth NewState.1.map.2.2.2.1 2}#', NEWMAP DU PLAYER2AFTERUPDATE : '#{List.nth NewState.1.map.2.2.2.1 2}#''}
+	 if({SeeHowManyPlayers NewState 0}>1) then%% Le jeu comporte encore plus de un joueur
+	    {TurnByTurn NewState}
 	 else
-	    skip %% Il faut afficher le vainqueur
+	    case {SeeHowManyPlayers NewState 0} of 0 then
+	       local Winner ID in
+		  Winner={CheckScore NewState NewState.1}
+		  {Send Winner.port getId(ID)}
+		  {Wait ID}
+		  {Send GUI_Port displayWinner(ID)}
+	       end
+	    else
+	       local Winner ID in
+		  Winner={CheckWinner NewState}
+		  {Send Winner.port getId(ID)}
+		  {Wait ID}
+		  {Send GUI_Port displayWinner(ID)}
+	       end
+	    end
 	 end
       end
    end
@@ -341,10 +432,10 @@ define
    GUI_Port = {GUI.portWindow}
    {Send GUI_Port buildWindow}                                        
 %%%%%%%%%%%%%%%%%%%% Initialisation des Bombers %%%%%%%%%%%%%%%%%%%%%%%
-   ListID = {Ids Input.colorsBombers [lucas jerem] 1}
+   ListID = {Ids Input.colorsBombers [lucas jerem jean] 1}
    ListBombers = {GenerateBombers Input.bombers ListID}
    {Initit ListBombers}
-   {Delay 5000}
+   {Delay 10000}
 %%%%%%%%%%%%%%%%%%%%%%%% On lance le jeu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    GameState = {GenerateGameState ListBombers}
    {TurnByTurn GameState}

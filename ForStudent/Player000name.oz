@@ -12,72 +12,28 @@ define
    TreatStream
    Name = 'namefordebug'
    Spawn
-   Move
    Doaction
    GetState
+   GetId
+   AssignSpawn
+   Add
+   GotHit
+   
    %%%%%%%%%%%%%%%%%%%% Fonctions utiles %%%%%%%%%%%%%%%%%%%%%%%%%%
    
    fun{NewEtat ID}
-      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 action:nil)
-   end
-   
-   fun{MapRandomPos}
-      pt(y:({OS.rand} mod Input.nbRow + 1) x:({OS.rand} mod Input.nbColumn + 1))
+      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 action:nil spawn:nil pos:nil posBomb:nil)
    end
 
-   fun{IsASpawn Pos}
-      if ({List.nth {List.nth Input.map Pos.y} Pos.x}==4) then true
-      else
-	 false
-      end
-   end
-  
-in
-   %%%%%%%%%%%%%%%%%%%% Fonctions comportementales %%%%%%%%%%%%%%%%%%%%%%%%%%
-   
-   fun{Spawn Etat ID Pos}
-      fun{NewSpawn} Pos in
-	 Pos = {MapRandomPos}
-	 if {IsASpawn Pos} then
-	    Pos
-	 else
-	    {NewSpawn}
-	 end
-      end
-      NewEtat
-   in
-      NewEtat = {Record.adjoin Etat etat(pos:{NewSpawn})}
-      ID = NewEtat.bomber
-      Pos = NewEtat.pos
-      NewEtat
-   end
-   
-   fun{Doaction Etat ID Action} NewEtat in 
-      if(Etat.state==off) then
-	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
-	 ID=NewEtat.bomber
-	 Action=NewEtat.action
-	 NewEtat
-      else
-	 ID = Etat.bomber
-	 local X in
-	    X = {OS.rans} mod 3
-	    if(X==0) then
-	       NewEtat = {Record.adjoin Etat etat(action:'move(Pos)')}
-	       ID=NewEtat.bomber
-	       Action=NewEtat.action
-	       NewEtat
-	    else
-	       NewEtat = {Record.adjoin Etat etat(action:'move(Pos)')}
-	       ID=NewEtat.bomber
-	       Action=NewEtat.action
-	       NewEtat
-	    end
-	 end
+   fun{Append L1 L2}
+      case L1 of H|T then
+	 H|{Append T L2}
+      [] nil then
+	 L2
       end
    end
 
-   fun{Move Etat ID Pos}
+   fun{Move Etat Pos}
       fun{Try}
 	 local X Y RandX RandXsign RandY RandYsign Pos RandXX RandYY in
 	    X=Etat.pos.x
@@ -107,15 +63,98 @@ in
       NewEtat
    in
       NewEtat = {AdjoinList Etat [pos#{Try}]}
-      ID = NewEtat.bomber
       Pos = NewEtat.pos
       NewEtat
    end
 
-   proc{GetState Etat ID State}
+   fun{Bomb Etat Pos}
+      Pos=Etat.pos
+      {Record.adjoin Etat etat(bomb:Etat.bomb-1 posBomb:{Append Pos Etat.posBomb})}
+   end
+   
+in
+   %%%%%%%%%%%%%%%%%%%% Fonctions comportementales %%%%%%%%%%%%%%%%%%%%%%%%%
+
+   fun{GetId Etat ID}
+      ID=Etat.bomber
+      Etat
+   end
+   
+   fun{GetState Etat ID State}
       State=Etat.state
       ID=Etat.bomber
+      Etat
    end
+
+   fun{AssignSpawn Etat Pos}
+      {Record.adjoin Etat etat(spawn:Pos)}
+   end
+
+   fun{Spawn Etat ID Pos}
+      if(Etat.life>0) then
+	 ID=Etat.bomber
+	 Pos=Etat.spawn
+	 {Record.adjoin Etat etat(pos:Pos state:on)}
+      else
+	 ID=nil
+	 Pos=nil
+	 {Record.adjoin Etat etat(pos:nil state:off)}
+      end
+   end
+
+   fun{Doaction Etat ID Action} NewEtat NewEtat2 in 
+      if(Etat.state==off) then
+	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
+	 ID=NewEtat.bomber
+	 Action=NewEtat.action
+	 NewEtat
+      else
+	 ID = Etat.bomber
+	 local X in
+	    X = {OS.rans} mod 3
+	    local Pos in
+	       if(X==0) then
+		  NewEtat={Move Etat Pos}
+		  NewEtat2={Record.adjoin NewEtat etat(action:move(Pos))}
+		  Action=NewEtat2.action
+		  NewEtat2
+	       else
+		  NewEtat = {Bomb Etat Pos}
+		  NewEtat2 = {Record.adjoin Etat etat(action:bomb(Pos))}
+		  Action=NewEtat.action
+		  NewEtat2
+	       end
+	    end
+	 end
+      end
+   end
+
+   fun{Add Etat Type Option Res}
+      case Type of bomb then
+	 Res=Etat.bomb+1
+	 {Record.adjoin Etat etat(bomb:Etat.bomb+1)}
+      [] point then
+	 Res=Etat.score+1
+	 {Record.adjoin Etat etat(score:Etat.score+1)}
+      end
+   end
+
+   fun{GotHit Etat ID Res}
+      if(Etat.state==off) then
+	 ID=nil
+	 Res=nil
+	 {Record.adjoin Etat etat(bomber:nil)}
+      else
+	 ID=Etat.bomber
+	 local NewLife NewEtat in
+	    NewLife=Etat.life-1
+	    NewEtat={Record.adjoin Etat etat(action:death(NewLife) life:NewLife)}
+	    Res=NewEtat.action
+	    NewEtat
+	 end
+      end
+   end
+	    
 	 
       
    %%%%%%%%%%%%%%%%%%%% Fonctions exécutives %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -143,15 +182,24 @@ in
       [] spawn(ID Pos)|T then NewEtat in
 	 NewEtat = {Spawn Etat ID Pos}
 	 {TreatStream T NewEtat}
-      [] move(ID Pos)|T then NewEtat in
-	 NewEtat = {Move Etat ID Pos}
+      [] getState(ID State)|T then NewEtat in
+	 NewEtat = {GetState Etat ID State}
 	 {TreatStream T NewEtat}
-      [] getState(ID State)|T then
-	 {GetState Etat ID State}
-	 {TreatStream T Etat}
-       [] doaction(ID Action)|T then NewEtat in
-       	 NewEtat = {Doaction Etat ID Action}
-       	 {TreatStream T NewEtat}
+      [] getId(ID)|T then NewEtat in
+	 NewEtat = {GetId Etat ID}
+	 {TreatStream T NewEtat}
+      [] doaction(ID Action)|T then NewEtat in
+	 NewEtat = {Doaction Etat ID Action}
+	 {TreatStream T NewEtat}
+      [] assignSpawn(Pos)|T then NewEtat in
+	 NewEtat = {AssignSpawn Etat Pos}
+	 {TreatStream T NewEtat}
+      [] add(Type Option Res)|T then NewEtat in
+	 NewEtat = {Add Etat Type Option Res}
+	 {TreatStream T NewEtat}
+      [] gotHit(ID Res)|T then NewEtat in
+	 NewEtat = {GotHit Etat ID Res}
+	 {TreatStream T NewEtat}
       end
    end
 end
