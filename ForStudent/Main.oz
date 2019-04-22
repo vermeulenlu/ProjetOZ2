@@ -393,12 +393,20 @@ define
 		  NewBonus={Retire Pos Player.bonusOn}
 		  NewGameState={UpdateBonus NewBonus GameState}
 		  {Send GUI_Port hideBonus(Pos)}
-		  {Send Player.port add(point 1 ?Res)} %%%%%%%%%% A CHANGER %%%%%%%%%%%
-		  {Wait Res}
-		  {Send Player.port getId(?ID)}
-		  {Wait ID}
-		  {Send GUI_Port scoreUpdate(ID Res)}
-		  {Replace NewGameState {Record.adjoin {List.nth NewGameState N} player(pos:Pos score:Res)} N 1}
+		  if(({OS.rand} mod 2)==0)  then
+		     {Send Player.port add(point 10 ?Res)} %%%%%%%%%% A CHANGER %%%%%%%%%%%
+		     {Wait Res}
+		     {Send Player.port getId(?ID)}
+		     {Wait ID}
+		     {Send GUI_Port scoreUpdate(ID Res)}
+		     {Replace NewGameState {Record.adjoin {List.nth NewGameState N} player(pos:Pos score:Res)} N 1}
+		  else
+		     {Send Player.port add(bomb 1 ?Res)} %%%%%%%%%% A CHANGER %%%%%%%%%%%
+		     {Wait Res}
+		     {Send Player.port getId(?ID)}
+		     {Wait ID}
+		     {Replace NewGameState {Record.adjoin {List.nth NewGameState N} player(pos:Pos)} N 1}
+		  end
 	       end 
 	    else
 	       {Replace GameState {Record.adjoin Player player(pos:Pos)} N 1}
