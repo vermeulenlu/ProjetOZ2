@@ -7,7 +7,7 @@ import
    OS
 export
    portPlayer:StartPlayer
-define   
+define
    StartPlayer
    TreatStream
    Name = 'namefordebug'
@@ -18,18 +18,20 @@ define
    AssignSpawn
    Add
    GotHit
-   
+   Replace
+   Info
+
    %%%%%%%%%%%%%%%%%%%% Fonctions utiles %%%%%%%%%%%%%%%%%%%%%%%%%%
-   
+
    fun{NewEtat ID}
-      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 action:nil spawn:nil pos:nil posBomb:nil)
+      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 action:nil spawn:nil pos:nil posBomb:nil map:Input.map)
    end
 
    fun{Append L1 L2}
       case L1 of H|T then
-	 H|{Append T L2}
+	       H|{Append T L2}
       [] nil then
-	 L2
+	       L2
       end
    end
 
@@ -69,9 +71,9 @@ define
 
    fun{Bomb Etat Pos}
       Pos=Etat.pos
-      {Record.adjoin Etat etat(bomb:Etat.bomb-1 posBomb:{Append Pos Etat.posBomb})}
+      {Record.adjoin Etat etat(bomb:Etat.bomb-1 posBomb:Pos|Etat.posBomb)}
    end
-   
+
 in
    %%%%%%%%%%%%%%%%%%%% Fonctions comportementales %%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -79,7 +81,7 @@ in
       ID=Etat.bomber
       Etat
    end
-   
+
    fun{GetState Etat ID State}
       State=Etat.state
       ID=Etat.bomber
@@ -102,30 +104,30 @@ in
       end
    end
 
-   fun{Doaction Etat ID Action} NewEtat NewEtat2 in 
+   fun{Doaction Etat ID Action} NewEtat NewEtat2 in
       if(Etat.state==off) then
-	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
-	 ID=NewEtat.bomber
-	 Action=NewEtat.action
-	 NewEtat
+	       NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
+	       ID=NewEtat.bomber
+	       Action=NewEtat.action
+	       NewEtat
       else
-	 ID = Etat.bomber
-	 local X in
-	    X = {OS.rans} mod 3
-	    local Pos in
-	       if(X==0) then
-		  NewEtat={Move Etat Pos}
-		  NewEtat2={Record.adjoin NewEtat etat(action:move(Pos))}
-		  Action=NewEtat2.action
-		  NewEtat2
-	       else
-		  NewEtat = {Bomb Etat Pos}
-		  NewEtat2 = {Record.adjoin Etat etat(action:bomb(Pos))}
-		  Action=NewEtat.action
-		  NewEtat2
-	       end
-	    end
-	 end
+	       ID = Etat.bomber
+	       local X in
+	           X = {OS.rand} mod 3
+	           local Pos in
+	               if(X==0) then
+		                NewEtat={Move Etat Pos}
+		                NewEtat2={Record.adjoin NewEtat etat(action:move(Pos))}
+		                Action=NewEtat2.action
+		                NewEtat2
+	               else
+		                NewEtat = {Bomb Etat Pos}
+		                NewEtat2 = {Record.adjoin Etat etat(action:bomb(Pos))}
+		                Action=NewEtat.action
+		                NewEtat2
+	               end
+	          end
+	      end
       end
    end
 
@@ -154,11 +156,41 @@ in
 	 end
       end
    end
-	    
-	 
-      
+
+   fun{Replace List P N Count}
+      case List of H|T then
+         if(Count==N) then
+           P|T
+         else
+           H|{Replace T P N Count+1}
+         end
+      end
+   end
+
+   fun{Info Etat Message} %%TODO
+      case message of spawnPlayer(ID Pos) %% Player <bomber> ID has spawn in <position> Pos
+        then Etat %%Useless pour la version random
+      [] movePlayer(ID Pos) %% Player <bomber> ID has move to <position> Pos
+        then Etat %%Useless pour la version random
+      [] deadPlayer(ID)%% Player <bomber> ID has died
+        then Etat %%Useless pour la version random
+      [] bombPlanted(Pos)%% Bomb has been planted at <position> Pos
+        then Etat %%Useless pour la version random
+      [] bombExploded(Pos)%% Bomb has exploded at <position> Pos
+        then Etat %%Useless pour la version random, sert a quoi ?
+      [] boxRemoved(Pos) %%Tile at <position> Pos who previously had a box on it is now a floor tile
+        then
+            local NewMap in
+              NewMap = {Replace Etat.map {Replace {List.nth Etat.map Pos.y} 0 Pos.x 1} Pos.y 1} %%Change la map interne du joueur
+              {Record.adjoin Etat etat(map:NewMap)} %%Renvoie l'etat avec la nouvelle map
+            end
+      end
+    end
+
    %%%%%%%%%%%%%%%%%%%% Fonctions exécutives %%%%%%%%%%%%%%%%%%%%%%%%%%
-   
+
+
+
    fun{StartPlayer ID}
       Stream
       Port
@@ -168,7 +200,7 @@ in
       {NewPort Stream Port}
       thread %% filter to test validity of message sent to the player
 	 OutputStream = {Projet2019util.portPlayerChecker Name ID Stream}
-	 Etat = {NewEtat ID} 
+	 Etat = {NewEtat ID}
       end
       thread
 	 {TreatStream OutputStream Etat}
@@ -176,7 +208,7 @@ in
       Port
    end
 
-   
+
    proc{TreatStream Stream Etat} %% TODO you may add some arguments if needed
       case Stream of nil then skip
       [] spawn(ID Pos)|T then NewEtat in
@@ -200,6 +232,13 @@ in
       [] gotHit(ID Res)|T then NewEtat in
 	 NewEtat = {GotHit Etat ID Res}
 	 {TreatStream T NewEtat}
+      [] info(Message)|T then NewEtat in
+   NewEtat = {Info Etat Message}
+   {TreatStream T NewEtat}
       end
    end
+
+
+
+
 end
