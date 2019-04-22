@@ -1,7 +1,7 @@
 functor
 import
-   GUI 
-   Input 
+   GUI
+   Input
    PlayerManager
    System(showInfo:Print)
    OS
@@ -49,7 +49,7 @@ define
 
    fun{Ids Colors Name NId}
       if(NId >Input.nbBombers) then nil
-      else 
+      else
 	 case Colors#Name of (H1|T1)#(H2|T2) then
 	    bomber(id:NId color:H1 name:H2)|{Ids T1 T2 NId+1}
 	 [] nil#nil then nil
@@ -77,7 +77,7 @@ define
       end
    end
 
-   
+
    fun{GenerateBombers List ID}
       case List#ID of (H1|T1)#(H2|T2) then
 	 {PlayerManager.playerGenerator H1 H2}|{GenerateBombers T1 T2}
@@ -91,7 +91,7 @@ define
       [] nil then nil
       end
    end
-   
+
 
    proc{Initit List}
       case List of H|T then
@@ -221,7 +221,7 @@ define
    fun{IsPresent Pos Points} Res in
       case Points of H|T then
 	 if(Pos.x==H.x) then
-	    if(Pos.y==H.y) then  
+	    if(Pos.y==H.y) then
 	       Res=true
 	    else
 	       Res={IsPresent Pos T}
@@ -258,7 +258,7 @@ define
 	 end
       end
    end
-      
+
 
    fun{EliminatePlayers Points GameState}
       case GameState of H|T then
@@ -274,7 +274,7 @@ define
       [] nil then nil
       end
    end
-	 
+
 
    fun{Explode Player TotalGameState N} NewTotalGameState PosBomb IDBomb PointsToFire NewPlayer NewMap R in
       PosBomb=Player.bombpos
@@ -312,7 +312,7 @@ define
 	 end
       end
    end
-   
+
 
    fun{GetState Player}
       local ID State in
@@ -347,11 +347,11 @@ define
       [] nil then nil
       end
    end
-	 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% Fonction pour checker si une bombe doit exploser et ses MAJ %%%%%%%%%%%%%%%%%%%%%
-   
-   fun{UpdateBomb Player TotalGameState N} NewTotalGameState in 
+
+   fun{UpdateBomb Player TotalGameState N} NewTotalGameState in
       if(Player.bombtimeBeforeExplode == nil) then
 	 TotalGameState
       else
@@ -368,7 +368,7 @@ define
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% Action d un joueur : Move ou Bomb %%%%%%%%%%%%%%%%%%%%%
-   
+
    fun{MakeAction Player GameState N} NewGameState in
       local ID Action in
 	 {Send Player.port doaction(ID Action)}
@@ -407,7 +407,7 @@ define
 		     {Wait ID}
 		     {Replace NewGameState {Record.adjoin {List.nth NewGameState N} player(pos:Pos)} N 1}
 		  end
-	       end 
+	       end
 	    else
 	       {Replace GameState {Record.adjoin Player player(pos:Pos)} N 1}
 	    end
@@ -418,11 +418,11 @@ define
       end
    end
 
-   
+
 %%%%%%%%%%%%%%%%%%%%%%%%%% Boucle pour traiter la liste des joueurs %%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%% Input : Liste d'etat des joueurs %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%% Output : Nouvelle liste d'etat sans les joueurs elimines %%%%%%%%%%%%%%%%%
-   
+
    fun{Run GameState TotalGameState N} NewGameState NewGameState2 in
       {Delay 220}
       case GameState of H|T then
@@ -437,11 +437,11 @@ define
 	 end
       [] nil then nil
       end
-   end   
+   end
 
 %%%%%%%%%%%%%%%%%%% Procédure TurnByTurn %%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%% Input : Liste d'etat des joueurs %%%%%%%%%%%%
-   
+
    proc{TurnByTurn GameState}
       local NewGameState MapToUpdate NewState PointToUpdate BonusToUpdate in
 	 NewGameState = {Run GameState GameState 1}
@@ -470,14 +470,14 @@ define
 	 end
       end
    end
-   
-   
+
+
    in
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%% Initialisation de l'interface graphique %%%%%%%%%%%%%%%%
    GUI_Port = {GUI.portWindow}
-   {Send GUI_Port buildWindow}                                        
+   {Send GUI_Port buildWindow}
 %%%%%%%%%%%%%%%%%%%% Initialisation des Bombers %%%%%%%%%%%%%%%%%%%%%%%
    ListID = {Ids Input.colorsBombers [lucas jerem] 1}
    ListBombers = {GenerateBombers Input.bombers ListID}
