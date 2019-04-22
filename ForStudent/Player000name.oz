@@ -22,7 +22,7 @@ define
    %%%%%%%%%%%%%%%%%%%% Fonctions utiles %%%%%%%%%%%%%%%%%%%%%%%%%%
    
    fun{NewEtat ID}
-      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 action:nil spawn:nil pos:nil posBomb:nil)
+      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 action:nil spawn:nil pos:nil posBomb:nil map:Input.map)
    end
 
    fun{Append L1 L2}
@@ -111,7 +111,7 @@ in
       else
 	 ID = Etat.bomber
 	 local X in
-	    X = {OS.rans} mod 3
+	    X = {OS.rand} mod 3
 	    local Pos in
 	       if(X==0) then
 		  NewEtat={Move Etat Pos}

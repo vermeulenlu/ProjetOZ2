@@ -4,6 +4,13 @@
 # noma2 : name2 surname2
 # ----------------------------
 
-# TODO complete the header with your group number, your noma's and full names
+all :compile
 
-# TODO write your makefile here
+compile :
+	./ozc -c *.oz
+
+start :
+	./ozengine Main.ozf
+
+clean :
+	@rm -rf GUI.ozf Input.ozf Main.ozf PlayerManager.ozf Player000name.ozf
