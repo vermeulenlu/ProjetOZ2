@@ -37,34 +37,36 @@ define
 
    fun{Move Etat Pos}
       fun{Try}
-	 local X Y RandX RandXsign RandY RandYsign Pos RandXX RandYY in
-	    X=Etat.pos.x
-	    Y=Etat.pos.y
-	    RandXX={OS.rand} mod 2
-	    RandYY={OS.rand} mod 2
-	    RandXsign = {OS.rand} mod 2
-	    RandYsign = {OS.rand} mod 2
-	    if(RandXsign==0) then
-	       RandX=(~RandXX)
-	    else RandX=RandXX
-	    end
-	    if(RandYsign==0) then
-	       RandY=(~RandYY)
-	    else RandY=RandYY
-	    end
-	    Pos = pt(x:X+RandX y:Y+RandY)
-	    if({List.nth {List.nth Input.map Pos.y} Pos.x}==1 orelse {List.nth {List.nth Input.map Pos.y} Pos.x} ==2 orelse {List.nth {List.nth Input.map Pos.y} Pos.x}==3 ) then {Try}
-	    else
-	       if((RandX)*(RandY) == 0) then
-		  if(RandX+RandY == 0) then {Try}
-		  else
-		     Pos
-		  end
-	       else
-		  {Try}
+	       local X Y RandX RandXsign RandY RandYsign Pos RandXX RandYY in
+	           X=Etat.pos.x
+	           Y=Etat.pos.y
+	           RandXX={OS.rand} mod 2
+	           RandYY={OS.rand} mod 2
+	           RandXsign = {OS.rand} mod 2
+	           RandYsign = {OS.rand} mod 2
+	           if(RandXsign==0) then
+	               RandX=(~RandXX)
+	           else RandX=RandXX
+	           end
+	           if(RandYsign==0) then
+	               RandY=(~RandYY)
+	           else RandY=RandYY
+	           end
+	           Pos = pt(x:X+RandX y:Y+RandY)
+	           if({List.nth {List.nth Input.map Pos.y} Pos.x}==1 orelse {List.nth {List.nth Input.map Pos.y} Pos.x} ==2 orelse {List.nth {List.nth Input.map Pos.y} Pos.x}==3 ) then
+                 {Try}
+	           else
+	               if((RandX)*(RandY) == 0) then
+		                  if(RandX+RandY == 0) then
+                          {Try}
+		                  else
+		                      Pos
+		                  end
+	               else
+		                {Try}
+	               end
+	           end
 	       end
-	    end
-	 end
       end
       NewEtat
    in
@@ -183,10 +185,12 @@ in
       then Etat %%Useless pour la version random, sert a quoi ?
       [] boxRemoved(Pos)
       then
-	 local NewMap in
-	    NewMap = {Replace Etat.map {Replace {List.nth Etat.map Pos.y} 0 Pos.x 1} Pos.y 1} %%Change la map interne du joueur
-
-	    {Record.adjoin Etat etat(map:NewMap)} %%Renvoie l'etat avec la nouvelle map
+	 local NewMap PosX PosY NewEtat in
+      PosX=Pos.x
+      PosY=Pos.y
+      NewMap = {Replace Etat.map {Replace {List.nth Etat.map Pos.y} 0 PosX 1} PosY 1} %%Change la map interne du joueur
+	    NewEtat={Record.adjoin Etat etat(map:NewMap)} %%Renvoie l'etat avec la nouvelle map
+      NewEtat
 	 end
       end
 
