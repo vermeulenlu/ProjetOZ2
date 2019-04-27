@@ -24,18 +24,16 @@ define
    NbLives NbBombs
    ThinkMin ThinkMax
    TimingBomb TimingBombMin TimingBombMax Fire
-in 
+in
 
 
-%%%% Style of game %%%%
-   
-   IsTurnByTurn = false
+   IsTurnByTurn = true
    UseExtention = false
    PrintOK = true
 
 
 %%%% Description of the map %%%%
-   
+
    NbRow = 7
    NbColumn = 13
    Map = [[1 1 1 1 1 1 1 1 1 1 1 1 1]
@@ -49,19 +47,19 @@ in
 %%%% Players description %%%%
 
    NbBombers = 2
-   Bombers = [player000bomber player000bomber]
+   Bombers = [player000name player000name]
    ColorBombers = [yellow red]
 
 %%%% Parameters %%%%
 
    NbLives = 10
    NbBombs = 1
- 
+
    ThinkMin = 400  % in millisecond
    ThinkMax = 600 % in millisecond
-   
+
    Fire = 2
-   TimingBomb = 3 
+   TimingBomb = 3
    TimingBombMin = 5000 % in millisecond
    TimingBombMax = 6000 % in millisecond
 
