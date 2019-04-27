@@ -12,7 +12,7 @@ define
    ListID
    ListBombers
 
-   proc{BroadCast Message N} GameState State in
+   proc{BroadCast Message N} GameState State in 
       {Send Game_Port askGameState(State)}
       {Wait State}
       GameState = {RetrieveListLast State N 1}
@@ -43,7 +43,7 @@ define
 
    fun{Ids Colors Name NId}
       if(NId >Input.nbBombers) then nil
-      else
+      else 
 	 case Colors#Name of (H1|T1)#(H2|T2) then
 	    bomber(id:NId color:H1 name:H2)|{Ids T1 T2 NId+1}
 	 [] nil#nil then nil
@@ -57,11 +57,11 @@ define
       [] nil#nil then nil
       end
    end
-
+   
    fun{IsPresent Pos Points} Res in
       case Points of H|T then
 	 if(Pos.x==H.x) then
-	    if(Pos.y==H.y) then
+	    if(Pos.y==H.y) then  
 	       Res=true
 	    else
 	       Res={IsPresent Pos T}
@@ -149,7 +149,7 @@ define
 	 {NewSpawn}
       end
    end
-
+   
    proc{Initit List}
       case List of H|T then
 	 local ID Pos in
@@ -317,7 +317,7 @@ define
       {Fiiire PointsToFire}
       {EliminatePlayers PointsToFire 0}
       {Delay 400}
-      {HideFiiire PointsToFire}
+      {HideFiiire PointsToFire} 
       {Send Game_Port askBombList(BombList)}
       {Wait BombList}
       NewBombList={RetireBomb BombList Bomb}
@@ -359,47 +359,47 @@ define
       {Wait ID}
       {Wait Action}
       case Action of move(Pos) then
-	       {Send GUI_Port movePlayer(ID Pos)}
-	       {Send Game_Port askPoints(Points)}
-	       {Wait Points}
-	       {Send Game_Port askBonus(Bonus)}
-	       {Wait Bonus}
-	       if({IsPresent Pos Points}) then NewPoints in %% Point
-	          NewPoints={Retire Pos Points}
-	          {Send Game_Port pointListChanged(NewPoints)}
-	          {Send GUI_Port hidePoint(Pos)}
-	          {Send Player.port add(point 1 ?Res)}
-	          {Wait Res}
-	          {Send GUI_Port scoreUpdate(ID Res)}
-	          {Send Game_Port playerMoved(Pos ID.id)}
-	       elseif({IsPresent Pos Bonus}) then NewBonus in %% Bonus
-	          NewBonus={Retire Pos Bonus}
-	          {Send Game_Port bonusListChanged(NewBonus)}
-	          {Send GUI_Port hideBonus(Pos)}
-	          if(({OS.rand} mod 2)==0)  then
-		            {Send Player.port add(point 10 ?Res)}
-		            {Wait Res}
-		            {Send GUI_Port scoreUpdate(ID Res)}
-		            {Send Game_Port playerMoved(Pos ID.id)}
-	          else
-		            {Send Player.port add(bomb 1 ?Res)}
-		            {Wait Res}
-		            {Send Game_Port playerMoved(Pos ID.id)}
-	          end
+	 {Send GUI_Port movePlayer(ID Pos)}
+	 {Send Game_Port askPoints(Points)}
+	 {Wait Points}
+	 {Send Game_Port askBonus(Bonus)}
+	 {Wait Bonus}
+	 if({IsPresent Pos Points}) then NewPoints in %% Point
+	    NewPoints={Retire Pos Points}
+	    {Send Game_Port pointListChanged(NewPoints)}
+	    {Send GUI_Port hidePoint(Pos)}
+	    {Send Player.port add(point 1 ?Res)}
+	    {Wait Res}
+	    {Send GUI_Port scoreUpdate(ID Res)}
+	    {Send Game_Port playerMoved(Pos ID.id)}
+	 elseif({IsPresent Pos Bonus}) then NewBonus in %% Bonus
+	       NewBonus={Retire Pos Bonus}
+	       {Send Game_Port bonusListChanged(NewBonus)}
+	       {Send GUI_Port hideBonus(Pos)}
+	       if(({OS.rand} mod 2)==0)  then
+		  {Send Player.port add(point 10 ?Res)} 
+		  {Wait Res}
+		  {Send GUI_Port scoreUpdate(ID Res)}
+		  {Send Game_Port playerMoved(Pos ID.id)}
 	       else
-	          {Send Game_Port playerMoved(Pos ID.id)}
+		  {Send Player.port add(bomb 1 ?Res)}
+		  {Wait Res}
+		  {Send Game_Port playerMoved(Pos ID.id)}
 	       end
+	 else
+	    {Send Game_Port playerMoved(Pos ID.id)}
+	 end
       [] bomb(Pos) then NewBombList BombList in
-	       {Send GUI_Port spawnBomb(Pos)}
-	       {Send Game_Port askBombList(BombList)}
-	       {Wait BombList}
-	       if(Input.isTurnByTurn) then
-	           NewBombList = bomb(pos:Pos time:Input.timingBomb idBomber:ID idBomb:{OS.rand})|BombList
-	           {Send Game_Port bombListChanged(NewBombList)}
-	       else
-	           NewBombList = bomb(pos:Pos time:{Alarm Input.timingBombMin+({OS.rand} mod (Input.timingBombMax-Input.timingBombMin))} idBomber:ID idBomb:{OS.rand})|BombList
-	           {Send Game_Port bombListChanged(NewBombList)}
-	       end
+	 {Send GUI_Port spawnBomb(Pos)}
+	 {Send Game_Port askBombList(BombList)}
+	 {Wait BombList}
+	 if(Input.isTurnByTurn) then
+	    NewBombList = bomb(pos:Pos time:Input.timingBomb idBomber:ID idBomb:{OS.rand})|BombList
+	    {Send Game_Port bombListChanged(NewBombList)}
+	 else
+	    NewBombList = bomb(pos:Pos time:{Alarm Input.timingBombMin+({OS.rand} mod (Input.timingBombMax-Input.timingBombMin))} idBomber:ID idBomb:{OS.rand})|BombList
+	    {Send Game_Port bombListChanged(NewBombList)}
+	 end
       [] nil then skip
       end
    end
@@ -436,9 +436,9 @@ define
 	 skip %% A MODIFIER
       end
    end
-
+   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Fonctions Pour le Mode Simultané %%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+   
    proc{BombSim List} Res in
       case List of H|T then
 	 if(H.time == unit) then
@@ -465,7 +465,7 @@ define
       {Wait List}
       {BombSim List}
       {UpdateBombSim}
-   end
+   end    
 
 
    proc{RunThread Player} PlayerState Res2 in
@@ -508,13 +508,13 @@ define
    proc{SimThink}
       {Delay Input.thinkMin+({OS.rand} mod (Input.thinkMax-Input.thinkMin))}
    end
-
+   
 in
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 %%%%%%%%%%%%%% Initialisation de l'interface graphique %%%%%%%%%%%%%%%%
    GUI_Port = {GUI.portWindow}
-   {Send GUI_Port buildWindow}
+   {Send GUI_Port buildWindow}                                        
 %%%%%%%%%%%%%%%%%%%% Initialisation des Bombers %%%%%%%%%%%%%%%%%%%%%%%
    ListID = {Ids Input.colorsBombers [lucas jerem] 1}
    ListBombers = {GenerateBombers Input.bombers ListID}
@@ -522,10 +522,10 @@ in
    {Initit ListBombers}
    {Delay 10000}
 %%%%%%%%%%%%%%%%%%%%%%%% On lance le jeu %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-   case Input.isTurnByTurn of true then
+   case Input.isTurnByTurn of true then 
       {TurnByTurn}
    else
       {Simultaneous}
    end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
 end

@@ -21,17 +21,17 @@ define
    Replace
    Info
 
-   %%%%%%%%%%%%%%%%%%%% Fonctions utiles %%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% Fonctions utiles %%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun{NewEtat ID}
-      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 action:nil spawn:nil pos:nil posBomb:nil map:Input.map)
+      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 spawn:nil pos:nil posBomb:nil map:Input.map)
    end
 
    fun{Append L1 L2}
       case L1 of H|T then
-	       H|{Append T L2}
+	 H|{Append T L2}
       [] nil then
-	       L2
+	 L2
       end
    end
 
@@ -55,7 +55,11 @@ define
 	    Pos = pt(x:X+RandX y:Y+RandY)
 	    if({List.nth {List.nth Input.map Pos.y} Pos.x}==1 orelse {List.nth {List.nth Input.map Pos.y} Pos.x} ==2 orelse {List.nth {List.nth Input.map Pos.y} Pos.x}==3 ) then {Try}
 	    else
-	       if((RandX)*(RandY) == 0) then Pos
+	       if((RandX)*(RandY) == 0) then
+		  if(RandX+RandY == 0) then {Try}
+		  else
+		     Pos
+		  end
 	       else
 		  {Try}
 	       end
@@ -70,12 +74,11 @@ define
    end
 
    fun{Bomb Etat Pos}
-      Pos=Etat.pos
       {Record.adjoin Etat etat(bomb:Etat.bomb-1 posBomb:Pos|Etat.posBomb)}
    end
 
 in
-   %%%%%%%%%%%%%%%%%%%% Fonctions comportementales %%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% Fonctions comportementales %%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun{GetId Etat ID}
       ID=Etat.bomber
@@ -106,28 +109,28 @@ in
 
    fun{Doaction Etat ID Action} NewEtat NewEtat2 in
       if(Etat.state==off) then
-	       NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
-	       ID=NewEtat.bomber
-	       Action=NewEtat.action
-	       NewEtat
+	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
+	 ID=NewEtat.bomber
+	 Action=NewEtat.action
+	 NewEtat
       else
-	       ID = Etat.bomber
-	       local X in
-	           X = {OS.rand} mod 3
-	           local Pos in
-	               if(X==0) then
-		                NewEtat={Move Etat Pos}
-		                NewEtat2={Record.adjoin NewEtat etat(action:move(Pos))}
-		                Action=NewEtat2.action
-		                NewEtat2
-	               else
-		                NewEtat = {Bomb Etat Pos}
-		                NewEtat2 = {Record.adjoin Etat etat(action:bomb(Pos))}
-		                Action=NewEtat.action
-		                NewEtat2
-	               end
-	          end
-	      end
+	 ID = Etat.bomber
+	 local X in
+	    X = {OS.rand} mod 16
+	    local Pos Pos2 in
+	       if(X>0) then
+		  NewEtat={Move Etat Pos2}
+		  Pos=NewEtat.pos
+		  Action=move(Pos)
+		  NewEtat
+	       else
+		  NewEtat={Bomb Etat Etat.pos}
+		  Pos=NewEtat.pos
+		  Action=bomb(Pos)
+		  NewEtat
+	       end
+	    end
+	 end
       end
    end
 
@@ -143,53 +146,53 @@ in
 
    fun{GotHit Etat ID Res}
       if(Etat.state==off) then
-	       ID=nil
-	       Res=nil
-	       {Record.adjoin Etat etat(bomber:nil)}
+	 ID=nil
+	 Res=nil
+	 {Record.adjoin Etat etat(bomber:nil)}
       else
-	       ID=Etat.bomber
-	       local NewLife NewEtat in
-	           NewLife=Etat.life-1
-	           NewEtat={Record.adjoin Etat etat(action:death(NewLife) life:NewLife)}
-	           Res=NewEtat.action
-	           NewEtat
-	       end
+	 ID=Etat.bomber
+	 local NewLife NewEtat in
+	    NewLife=Etat.life-1
+	    NewEtat={Record.adjoin Etat etat(life:NewLife)}
+	    Res=death(NewLife)
+	    NewEtat
+	 end
       end
    end
 
    fun{Replace List P N Count}
       case List of H|T then
-         if(Count==N) then
-           P|T
-         else
-           H|{Replace T P N Count+1}
-         end
+	 if(Count==N) then
+	    P|T
+	 else
+	    H|{Replace T P N Count+1}
+	 end
       end
    end
 
    fun{Info Etat Message} %%TODO
       case Message of spawnPlayer(ID Pos) %% Player <bomber> ID has spawn in <position> Pos
-        then Etat %%Useless pour la version random
+      then Etat %%Useless pour la version random
       [] movePlayer(ID Pos) %% Player <bomber> ID has move to <position> Pos
-        then Etat %%Useless pour la version random
+      then Etat %%Useless pour la version random
       [] deadPlayer(ID)%% Player <bomber> ID has died
-        then Etat %%Useless pour la version random
+      then Etat %%Useless pour la version random
       [] bombPlanted(Pos)%% Bomb has been planted at <position> Pos
-        then Etat %%Useless pour la version random
+      then Etat %%Useless pour la version random
       [] bombExploded(Pos)%% Bomb has exploded at <position> Pos
-        then Etat %%Useless pour la version random, sert a quoi ?
+      then Etat %%Useless pour la version random, sert a quoi ?
       [] boxRemoved(Pos)
-        then
-            local NewMap in
-              NewMap = {Replace Etat.map {Replace {List.nth Etat.map Pos.y} 0 Pos.x 1} Pos.y 1} %%Change la map interne du joueur
+      then
+	 local NewMap in
+	    NewMap = {Replace Etat.map {Replace {List.nth Etat.map Pos.y} 0 Pos.x 1} Pos.y 1} %%Change la map interne du joueur
 
-              {Record.adjoin Etat etat(map:NewMap)} %%Renvoie l'etat avec la nouvelle map
-            end
+	    {Record.adjoin Etat etat(map:NewMap)} %%Renvoie l'etat avec la nouvelle map
+	 end
       end
 
-    end
+   end
 
-   %%%%%%%%%%%%%%%%%%%% Fonctions exécutives %%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% Fonctions exécutives %%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
@@ -235,8 +238,8 @@ in
 	 NewEtat = {GotHit Etat ID Res}
 	 {TreatStream T NewEtat}
       [] info(Message)|T then NewEtat in
-   NewEtat = {Info Etat Message}
-   {TreatStream T NewEtat}
+	 NewEtat = {Info Etat Message}
+	 {TreatStream T NewEtat}
       end
    end
 

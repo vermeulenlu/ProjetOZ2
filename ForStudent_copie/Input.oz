@@ -27,8 +27,6 @@ define
 in
 
 
-%%%% Style of game %%%%
-
    IsTurnByTurn = true
    UseExtention = false
    PrintOK = true
