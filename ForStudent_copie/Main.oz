@@ -383,8 +383,7 @@ define
 		            {Send GUI_Port scoreUpdate(ID Res)}
 		            {Send Game_Port playerMoved(Pos ID.id)}
 	           else
-                {Browser.browse 'C est une bombe'}
-                {Time.delay 10000}
+                
 		            {Send Player.port add(bomb 1 ?Res)}
 		            {Wait Res}
 		            {Send Game_Port playerMoved(Pos ID.id)}
