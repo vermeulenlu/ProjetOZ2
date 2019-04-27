@@ -46,14 +46,16 @@ define
 	           RandYsign = {OS.rand} mod 2
 	           if(RandXsign==0) then
 	               RandX=(~RandXX)
-	           else RandX=RandXX
+	           else
+                 RandX=RandXX
 	           end
 	           if(RandYsign==0) then
 	               RandY=(~RandYY)
-	           else RandY=RandYY
+	           else
+                 RandY=RandYY
 	           end
 	           Pos = pt(x:X+RandX y:Y+RandY)
-	           if({List.nth {List.nth Input.map Pos.y} Pos.x}==1 orelse {List.nth {List.nth Input.map Pos.y} Pos.x} ==2 orelse {List.nth {List.nth Input.map Pos.y} Pos.x}==3 ) then
+	           if({List.nth {List.nth Etat.map Pos.y} Pos.x}==1 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x} ==2 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x}==3 ) then
                  {Try}
 	           else
 	               if((RandX)*(RandY) == 0) then
@@ -111,54 +113,54 @@ in
 
    fun{Doaction Etat ID Action} NewEtat NewEtat2 in
       if(Etat.state==off) then
-	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
-	 ID=NewEtat.bomber
-	 Action=NewEtat.action
-	 NewEtat
+	       NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
+	       ID=NewEtat.bomber
+	       Action=NewEtat.action
+	       NewEtat
       else
-	 ID = Etat.bomber
-	 local X in
-	    X = {OS.rand} mod 16
-	    local Pos Pos2 in
-	       if(X>0) then
-		  NewEtat={Move Etat Pos2}
-		  Pos=NewEtat.pos
-		  Action=move(Pos)
-		  NewEtat
-	       else
-		  NewEtat={Bomb Etat Etat.pos}
-		  Pos=NewEtat.pos
-		  Action=bomb(Pos)
-		  NewEtat
+	       ID = Etat.bomber
+	       local X in
+	           X = {OS.rand} mod 16
+	           local Pos Pos2 in
+	               if(X>0) then
+		                  NewEtat={Move Etat Pos2}
+		                  Pos=NewEtat.pos
+		                  Action=move(Pos)
+		                  NewEtat
+	               else
+		                  NewEtat={Bomb Etat Etat.pos}
+		                  Pos=NewEtat.pos
+		                  Action=bomb(Pos)
+		                  NewEtat
+	               end
+	           end
 	       end
-	    end
-	 end
       end
    end
 
    fun{Add Etat Type Option Res}
       case Type of bomb then
-	 Res=Etat.bomb+1
-	 {Record.adjoin Etat etat(bomb:Etat.bomb+1)}
+	       Res=Etat.bomb+1
+	       {Record.adjoin Etat etat(bomb:Etat.bomb+1)}
       [] point then
-	 Res=Etat.score+1
-	 {Record.adjoin Etat etat(score:Etat.score+1)}
+	       Res=Etat.score+Option
+	       {Record.adjoin Etat etat(score:Etat.score+Option)}
       end
    end
 
    fun{GotHit Etat ID Res}
       if(Etat.state==off) then
-	 ID=nil
-	 Res=nil
-	 {Record.adjoin Etat etat(bomber:nil)}
+	       ID=nil
+	       Res=nil
+	       {Record.adjoin Etat etat(bomber:nil)}
       else
-	 ID=Etat.bomber
-	 local NewLife NewEtat in
-	    NewLife=Etat.life-1
-	    NewEtat={Record.adjoin Etat etat(life:NewLife)}
-	    Res=death(NewLife)
-	    NewEtat
-	 end
+	       ID=Etat.bomber
+	       local NewLife NewEtat in
+	           NewLife=Etat.life-1
+	           NewEtat={Record.adjoin Etat etat(life:NewLife)}
+	           Res=death(NewLife)
+	           NewEtat
+	       end
       end
    end
 
