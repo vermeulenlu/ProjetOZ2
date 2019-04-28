@@ -187,37 +187,39 @@ define
 
    fun{Check X Y Xsup Ysup}
       fun{CheckLoop X Y Xsup Ysup N}
-	 local XFin YFin Map in
-	    if(Xsup<0) then XFin=X-1
-	    else
-	       XFin=(X)+(Xsup)
-	    end
-	    if(Ysup<0) then YFin=Y-1
-	    else
-	       YFin=(Y)+(Ysup)
-	    end
-	    if (XFin =< 0) then
-	       nil
-	    elseif(XFin>Input.nbColumn) then
-	       nil
-	    elseif(YFin=<0) then
-	       nil
-	    elseif(YFin>Input.nbRow) then
-	       nil
-	    elseif(N=<0) then
-	       nil
-	    else
-	       {Send Game_Port askMap(Map)}
-	       {Wait Map}
-	       case {List.nth {List.nth Map Y+Ysup} X+Xsup} of 1 then
-		  nil %% WALL
-	       [] 2 then pt(x:XFin y:YFin)|nil %% BOX WITH POINT
-	       [] 3 then pt(x:XFin y:YFin)|nil %% BOX WITH BONUS
-	       [] 4 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1} %% SPAWN
-	       [] 0 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1} %% SOL
-	       end
-	    end
-	 end
+	       local XFin YFin Map in
+	           if(Xsup<0) then
+                XFin=X-1
+	           else
+	              XFin=(X)+(Xsup)
+	           end
+	           if(Ysup<0) then
+                YFin=Y-1
+	           else
+	              YFin=(Y)+(Ysup)
+	           end
+	           if (XFin =< 0) then
+	              nil
+	           elseif(XFin>Input.nbColumn) then
+	              nil
+	           elseif(YFin=<0) then
+	              nil
+	           elseif(YFin>Input.nbRow) then
+	              nil
+	           elseif(N=<0) then
+	              nil
+	           else
+	             {Send Game_Port askMap(Map)}
+	             {Wait Map}
+	             case {List.nth {List.nth Map Y+Ysup} X+Xsup} of 1 then
+		              nil %% WALL
+	             [] 2 then pt(x:XFin y:YFin)|nil %% BOX WITH POINT
+	             [] 3 then pt(x:XFin y:YFin)|nil %% BOX WITH BONUS
+	             [] 4 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1} %% SPAWN
+	             [] 0 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1} %% SOL
+	             end
+	          end
+	        end
       end
    in
       {CheckLoop X Y Xsup Ysup Input.fire}
@@ -233,9 +235,9 @@ define
 
    proc{Fiiire Points} Map BonusList in
       case Points of H|T then
-	 {Send GUI_Port spawnFire(H)}
-	 {Send Game_Port askMap(Map)}
-	 {Wait Map}
+	    {Send GUI_Port spawnFire(H)}
+	    {Send Game_Port askMap(Map)}
+	    {Wait Map}
 	 case {List.nth {List.nth Map H.y} H.x} of 2 then
 	    local NewMap PointsList in
 	       {Send GUI_Port hideBox(H)}
@@ -383,7 +385,7 @@ define
 		            {Send GUI_Port scoreUpdate(ID Res)}
 		            {Send Game_Port playerMoved(Pos ID.id)}
 	           else
-                
+
 		            {Send Player.port add(bomb 1 ?Res)}
 		            {Wait Res}
 		            {Send Game_Port playerMoved(Pos ID.id)}
