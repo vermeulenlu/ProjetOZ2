@@ -101,11 +101,7 @@ define
 
    fun{IsCovered PosX PosY NearBombList Map} %%Check si il y a un obstacle pour bloquer l'explosion des bombes proches
       case NearBombList of H|T then
-          if(PosX == H.x andthen PosY==H.y) then
-              false
-          elseif ({Number.abs PosX-{Number.abs H.x}} == 1 orelse {Number.abs PosY-{Number.abs H.y}} == 1) then %%Si la bombe est a une case, pas possible qu'il y ai un obstacle
-              false
-          elseif ({FindObstacle PosX PosY H.x H.y}) then
+          if ({FindObstacle PosX PosY H.x H.y}) then
               {IsCovered PosX PosY T Map}
           else
               false
