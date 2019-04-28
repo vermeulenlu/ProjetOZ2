@@ -37,38 +37,38 @@ define
 
    fun{Move Etat Pos}
       fun{Try}
-	       local X Y RandX RandXsign RandY RandYsign Pos RandXX RandYY in
-	           X=Etat.pos.x
-	           Y=Etat.pos.y
-	           RandXX={OS.rand} mod 2
-	           RandYY={OS.rand} mod 2
-	           RandXsign = {OS.rand} mod 2
-	           RandYsign = {OS.rand} mod 2
-	           if(RandXsign==0) then
-	               RandX=(~RandXX)
-	           else
-                 RandX=RandXX
-	           end
-	           if(RandYsign==0) then
-	               RandY=(~RandYY)
-	           else
-                 RandY=RandYY
-	           end
-	           Pos = pt(x:X+RandX y:Y+RandY)
-	           if({List.nth {List.nth Etat.map Pos.y} Pos.x}==1 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x} ==2 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x}==3 ) then
-                 {Try}
-	           else
-	               if((RandX)*(RandY) == 0) then
-		                  if(RandX+RandY == 0) then
-                          {Try}
-		                  else
-		                      Pos
-		                  end
-	               else
-		                {Try}
-	               end
-	           end
+	 local X Y RandX RandXsign RandY RandYsign Pos RandXX RandYY in
+	    X=Etat.pos.x
+	    Y=Etat.pos.y
+	    RandXX={OS.rand} mod 2
+	    RandYY={OS.rand} mod 2
+	    RandXsign = {OS.rand} mod 2
+	    RandYsign = {OS.rand} mod 2
+	    if(RandXsign==0) then
+	       RandX=(~RandXX)
+	    else
+	       RandX=RandXX
+	    end
+	    if(RandYsign==0) then
+	       RandY=(~RandYY)
+	    else
+	       RandY=RandYY
+	    end
+	    Pos = pt(x:X+RandX y:Y+RandY)
+	    if({List.nth {List.nth Etat.map Pos.y} Pos.x}==1 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x} ==2 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x}==3 ) then
+	       {Try}
+	    else
+	       if((RandX)*(RandY) == 0) then
+		  if(RandX+RandY == 0) then
+		     {Try}
+		  else
+		     Pos
+		  end
+	       else
+		  {Try}
 	       end
+	    end
+	 end
       end
       NewEtat
    in
@@ -113,54 +113,58 @@ in
 
    fun{Doaction Etat ID Action} NewEtat NewEtat2 in
       if(Etat.state==off) then
-	       NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
-	       ID=NewEtat.bomber
-	       Action=NewEtat.action
-	       NewEtat
+	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
+	 ID=NewEtat.bomber
+	 Action=NewEtat.action
+	 NewEtat
       else
-	       ID = Etat.bomber
-	       local X in
-	           X = {OS.rand} mod 16
-	           local Pos Pos2 in
-	               if(X>0) then
-		                  NewEtat={Move Etat Pos2}
-		                  Pos=NewEtat.pos
-		                  Action=move(Pos)
-		                  NewEtat
-	               else
-		                  NewEtat={Bomb Etat Etat.pos}
-		                  Pos=NewEtat.pos
-		                  Action=bomb(Pos)
-		                  NewEtat
-	               end
-	           end
+	 ID = Etat.bomber
+	 local X in
+	    X = {OS.rand} mod 3
+	    local Pos Pos2 in
+	       if(X>0 orelse Etat.bomb==0) then
+		  NewEtat={Move Etat Pos2}
+		  Pos=NewEtat.pos
+		  Action=move(Pos)
+		  NewEtat
+	       else
+		  NewEtat={Bomb Etat Etat.pos}
+		  Pos=NewEtat.pos
+		  Action=bomb(Pos)
+		  NewEtat
 	       end
+	    end
+	 end
       end
    end
 
    fun{Add Etat Type Option Res}
       case Type of bomb then
-	       Res=Etat.bomb+1
-	       {Record.adjoin Etat etat(bomb:Etat.bomb+1)}
+	 Res=Etat.bomb+1
+	 {Record.adjoin Etat etat(bomb:Etat.bomb+1)}
       [] point then
-	       Res=Etat.score+Option
-	       {Record.adjoin Etat etat(score:Etat.score+Option)}
+	 Res=Etat.score+Option
+	 {Record.adjoin Etat etat(score:Etat.score+Option)}
       end
    end
 
    fun{GotHit Etat ID Res}
       if(Etat.state==off) then
-	       ID=nil
-	       Res=nil
-	       {Record.adjoin Etat etat(bomber:nil)}
+	 ID=nil
+	 Res=nil
+	 {Record.adjoin Etat etat(bomber:nil)}
       else
-	       ID=Etat.bomber
-	       local NewLife NewEtat in
-	           NewLife=Etat.life-1
-	           NewEtat={Record.adjoin Etat etat(life:NewLife)}
-	           Res=death(NewLife)
-	           NewEtat
-	       end
+	 ID=Etat.bomber
+	 local NewLife NewEtat in
+	    NewLife=Etat.life-1
+	    if(NewLife==0) then
+	       NewEtat={Record.adjoin Etat etat(life:NewLife state:off)}
+	    else
+	       NewEtat={Record.adjoin Etat etat(life:NewLife)}
+	    end
+	    Res=death(NewLife)
+	    NewEtat
+	 end
       end
    end
 
@@ -188,11 +192,11 @@ in
       [] boxRemoved(Pos)
       then
 	 local NewMap PosX PosY NewEtat in
-      PosX=Pos.x
-      PosY=Pos.y
-      NewMap = {Replace Etat.map {Replace {List.nth Etat.map Pos.y} 0 PosX 1} PosY 1} %%Change la map interne du joueur
+	    PosX=Pos.x
+	    PosY=Pos.y
+	    NewMap = {Replace Etat.map {Replace {List.nth Etat.map Pos.y} 0 PosX 1} PosY 1} %%Change la map interne du joueur
 	    NewEtat={Record.adjoin Etat etat(map:NewMap)} %%Renvoie l'etat avec la nouvelle map
-      NewEtat
+	    NewEtat
 	 end
       end
 
