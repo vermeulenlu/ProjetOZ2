@@ -187,39 +187,39 @@ define
 
    fun{Check X Y Xsup Ysup}
       fun{CheckLoop X Y Xsup Ysup N}
-	       local XFin YFin Map in
-	           if(Xsup<0) then
-                XFin=X-1
-	           else
-	              XFin=(X)+(Xsup)
-	           end
-	           if(Ysup<0) then
-                YFin=Y-1
-	           else
-	              YFin=(Y)+(Ysup)
-	           end
-	           if (XFin =< 0) then
-	              nil
-	           elseif(XFin>Input.nbColumn) then
-	              nil
-	           elseif(YFin=<0) then
-	              nil
-	           elseif(YFin>Input.nbRow) then
-	              nil
-	           elseif(N=<0) then
-	              nil
-	           else
-	             {Send Game_Port askMap(Map)}
-	             {Wait Map}
-	             case {List.nth {List.nth Map Y+Ysup} X+Xsup} of 1 then
-		              nil %% WALL
-	             [] 2 then pt(x:XFin y:YFin)|nil %% BOX WITH POINT
-	             [] 3 then pt(x:XFin y:YFin)|nil %% BOX WITH BONUS
-	             [] 4 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1} %% SPAWN
-	             [] 0 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1} %% SOL
-	             end
-	          end
-	        end
+	 local XFin YFin Map in
+	    if(Xsup<0) then
+	       XFin=X-1
+	    else
+	       XFin=(X)+(Xsup)
+	    end
+	    if(Ysup<0) then
+	       YFin=Y-1
+	    else
+	       YFin=(Y)+(Ysup)
+	    end
+	    if (XFin =< 0) then
+	       nil
+	    elseif(XFin>Input.nbColumn) then
+	       nil
+	    elseif(YFin=<0) then
+	       nil
+	    elseif(YFin>Input.nbRow) then
+	       nil
+	    elseif(N=<0) then
+	       nil
+	    else
+	       {Send Game_Port askMap(Map)}
+	       {Wait Map}
+	       case {List.nth {List.nth Map Y+Ysup} X+Xsup} of 1 then
+		  nil %% WALL
+	       [] 2 then pt(x:XFin y:YFin)|nil %% BOX WITH POINT
+	       [] 3 then pt(x:XFin y:YFin)|nil %% BOX WITH BONUS
+	       [] 4 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1} %% SPAWN
+	       [] 0 then pt(x:XFin y:YFin)|{CheckLoop XFin YFin Xsup Ysup N-1} %% SOL
+	       end
+	    end
+	 end
       end
    in
       {CheckLoop X Y Xsup Ysup Input.fire}
@@ -235,9 +235,9 @@ define
 
    proc{Fiiire Points} Map BonusList in
       case Points of H|T then
-	    {Send GUI_Port spawnFire(H)}
-	    {Send Game_Port askMap(Map)}
-	    {Wait Map}
+	 {Send GUI_Port spawnFire(H)}
+	 {Send Game_Port askMap(Map)}
+	 {Wait Map}
 	 case {List.nth {List.nth Map H.y} H.x} of 2 then
 	    local NewMap PointsList in
 	       {Send GUI_Port hideBox(H)}
@@ -298,16 +298,16 @@ define
       {Wait State}
       GameState = {RetrieveListLast State N 1}
       case GameState of H|T then
-	       local Gone NewPlayer in
-	           Gone={IsPresent H.pos Points}
-	           if(Gone==true) then
-	               NewPlayer={GotHit H State}
-	               {Send Game_Port updatePlayer(NewPlayer)}
-	               {EliminatePlayers Points N+1}
-	          else
-	               {EliminatePlayers Points N+1}
-	          end
-	       end
+	 local Gone NewPlayer in
+	    Gone={IsPresent H.pos Points}
+	    if(Gone==true) then
+	       NewPlayer={GotHit H State}
+	       {Send Game_Port updatePlayer(NewPlayer)}
+	       {EliminatePlayers Points N+1}
+	    else
+	       {EliminatePlayers Points N+1}
+	    end
+	 end
       [] nil then skip
       end
    end
@@ -324,6 +324,7 @@ define
       {Send Game_Port askBombList(BombList)}
       {Wait BombList}
       NewBombList={RetireBomb BombList Bomb}
+      {BroadCast bombExploded(PosBomb) 0}
       {Send Game_Port bombListChanged(NewBombList)}
    end
 
@@ -362,48 +363,50 @@ define
       {Wait ID}
       {Wait Action}
       case Action of move(Pos) then
-	       {Send GUI_Port movePlayer(ID Pos)}
-	       {Send Game_Port askPoints(Points)}
-	       {Wait Points}
-	       {Send Game_Port askBonus(Bonus)}
-	       {Wait Bonus}
-	       if({IsPresent Pos Points}) then NewPoints in %% Point
-	           NewPoints={Retire Pos Points}
-	           {Send Game_Port pointListChanged(NewPoints)}
-	           {Send GUI_Port hidePoint(Pos)}
-	           {Send Player.port add(point 1 ?Res)}
-	           {Wait Res}
-	           {Send GUI_Port scoreUpdate(ID Res)}
-	           {Send Game_Port playerMoved(Pos ID.id)}
-	       elseif({IsPresent Pos Bonus}) then NewBonus in %% Bonus
-	           NewBonus={Retire Pos Bonus}
-	           {Send Game_Port bonusListChanged(NewBonus)}
-	           {Send GUI_Port hideBonus(Pos)}
-	           if(({OS.rand} mod 2)==0)  then
-		            {Send Player.port add(point 10 ?Res)}
-		            {Wait Res}
-		            {Send GUI_Port scoreUpdate(ID Res)}
-		            {Send Game_Port playerMoved(Pos ID.id)}
-	           else
+	 {Send GUI_Port movePlayer(ID Pos)}
+	 {Send Game_Port askPoints(Points)}
+	 {Wait Points}
+	 {Send Game_Port askBonus(Bonus)}
+	 {Wait Bonus}
+	 if({IsPresent Pos Points}) then NewPoints in %% Point
+	    NewPoints={Retire Pos Points}
+	    {Send Game_Port pointListChanged(NewPoints)}
+	    {Send GUI_Port hidePoint(Pos)}
+	    {Send Player.port add(point 1 ?Res)}
+	    {Wait Res}
+	    {Send GUI_Port scoreUpdate(ID Res)}
+	    {Send Game_Port playerMoved(Pos ID.id)}
+	 elseif({IsPresent Pos Bonus}) then NewBonus in %% Bonus
+	    NewBonus={Retire Pos Bonus}
+	    {Send Game_Port bonusListChanged(NewBonus)}
+	    {Send GUI_Port hideBonus(Pos)}
+	    if(({OS.rand} mod 2)==0)  then
+	       {Send Player.port add(point 10 ?Res)}
+	       {Wait Res}
+	       {Send GUI_Port scoreUpdate(ID Res)}
+	       {Send Game_Port playerMoved(Pos ID.id)}
+	    else
 
-		            {Send Player.port add(bomb 1 ?Res)}
-		            {Wait Res}
-		            {Send Game_Port playerMoved(Pos ID.id)}
-	           end
-	       else
-	           {Send Game_Port playerMoved(Pos ID.id)}
-	       end
+	       {Send Player.port add(bomb 1 ?Res)}
+	       {Wait Res}
+	       {Send Game_Port playerMoved(Pos ID.id)}
+	    end
+	 else
+	    {Send Game_Port playerMoved(Pos ID.id)}
+	 end
       [] bomb(Pos) then NewBombList BombList in
-	       {Send GUI_Port spawnBomb(Pos)}
-	       {Send Game_Port askBombList(BombList)}
-	       {Wait BombList}
-	       if(Input.isTurnByTurn) then
-	           NewBombList = bomb(pos:Pos time:Input.timingBomb idBomber:ID idBomb:{OS.rand})|BombList
-	           {Send Game_Port bombListChanged(NewBombList)}
-	       else
-	           NewBombList = bomb(pos:Pos time:{Alarm Input.timingBombMin+({OS.rand} mod (Input.timingBombMax-Input.timingBombMin))} idBomber:ID idBomb:{OS.rand})|BombList
-	           {Send Game_Port bombListChanged(NewBombList)}
-	       end
+	 {Send GUI_Port spawnBomb(Pos)}
+	 {Send Game_Port askBombList(BombList)}
+	 {Wait BombList}
+	 if(Input.isTurnByTurn) then
+	    NewBombList = bomb(pos:Pos time:Input.timingBomb idBomber:ID idBomb:{OS.rand})|BombList
+	    {BroadCast bombPlanted(Pos) 0}
+	    {Send Game_Port bombListChanged(NewBombList)}
+	 else
+	    NewBombList = bomb(pos:Pos time:{Alarm Input.timingBombMin+({OS.rand} mod (Input.timingBombMax-Input.timingBombMin))} idBomber:ID idBomb:{OS.rand})|BombList
+	    {BroadCast bombPlanted(Pos) 0}
+	    {Send Game_Port bombListChanged(NewBombList)}
+	 end
       [] nil then skip
       end
    end

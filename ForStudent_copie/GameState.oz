@@ -42,9 +42,11 @@ define
       end
    end
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%% FONCTIONS COMPORTEMENTALES %%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
    
    fun{NewGameState List} GameState Players in
       GameState=gamestate(players:_ bomblist:nil bonus:nil map:Input.map points:nil isChanging:0)
