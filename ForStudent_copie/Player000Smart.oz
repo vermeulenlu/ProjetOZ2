@@ -32,6 +32,7 @@ define
    SelectShortestPath%%TOCHECK
    MinPath%%TOCHECK
    RetireBombOnPos%%TOCHECK
+   FindObstacle%%TOCHECK
 
 
 %%%%%%%%%%%%%%%%%%%% Fonctions utiles %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -101,6 +102,7 @@ define
 
    fun{IsCovered PosX PosY NearBombList Map} %%Check si il y a un obstacle pour bloquer l'explosion des bombes proches
       case NearBombList of H|T then
+<<<<<<< HEAD
 	 if(PosX == H.x andthen PosY==H.y) then
 	    false
 	 elseif ({Number.abs PosX-{Number.abs H.x}} == 1 orelse {Number.abs PosY-{Number.abs H.y}} == 1) then %%Si la bombe est a une case, pas possible qu'il y ai un obstacle
@@ -122,13 +124,62 @@ define
 	 else
 	    false
 	 end
+=======
+          if ({FindObstacle PosX PosY H.x H.y}) then
+              {IsCovered PosX PosY T Map}
+          else
+              false
+          end
+>>>>>>> aaaebe5f43a2a11c7de6062b72056006d2f182db
       []nil then %% On est couvert de toutes les bombes
 	 true
       end
    end
 
-   fun{IsBombNear PosX PosY BombList NearBombList}  %%check si il y a une bombe entre PosX et PosX +-2 ou entre PosY et PosY+-2. Return la pos des bombes qui respectent ces conditions
+
+   fun{FindObstacle PosX1 PosY1 PosX2 PosY2} ToGo in
+      if (PosX1 == PosX2) then
+        ToGo = PosY1 - PosY2
+        if (ToGo < ~1) then
+            if ({List.nth {List.nth Map PosY1+1} PosX1} == 2 orelse {List.nth {List.nth Map PosY1+1} PosX1}==3) then
+                true
+            else
+                {FindObstacle PosX1 PosY1+1 PosX2 PosY2}
+            end
+
+        elseif (ToGo > 1) then
+            if ({List.nth {List.nth Map PosY1-1} PosX1} == 2 orelse {List.nth {List.nth Map PosY1-1} PosX1}==3) then
+                true
+            else
+                {FindObstacle PosX1 PosY1-1 PosX2 PosY2}
+            end
+        else
+            false
+        end
+      else
+        ToGo = PosX1 - PosX2
+        if (ToGo <  ~1) then
+          if ({List.nth {List.nth Map PosY1} PosX1+1} == 2 orelse {List.nth {List.nth Map PosY1} PosX1+1}==3) then
+              true
+          else
+              {FindObstacle PosX1+1 PosY1 PosX2 PosY2}
+          end
+
+        elseif (ToGo > 1) then
+          if ({List.nth {List.nth Map PosY1} PosX1-1} == 2 orelse {List.nth {List.nth Map PosY1} PosX1-1}==3) then
+              true
+          else
+              {FindObstacle PosX1-1 PosY1 PosX2 PosY2}
+          end
+        else
+          false
+        end
+     end
+   end
+
+   fun{IsBombNear PosX PosY BombList NearBombList}  %%check si il y a une bombe entre PosX et PosX +-Input.fire ou entre PosY et PosY+-2. Return la pos des bombes qui respectent ces conditions
       case BombList of H|T then
+<<<<<<< HEAD
 	 if (PosX == H.x andthen PosY == H.y) then %%Bombe sur notre position
 	    {IsBombNear PosX PosY T {Append NearBombList H}}
 	 elseif (PosX+2 >= H.x andthen PosY == H.y) then %%Bombe a droite
@@ -142,6 +193,21 @@ define
 	 else
 	    {IsBombNear PosX PosY T NearBombList}
 	 end
+=======
+          if (PosX == H.x andthen PosY == H.y) then %%Bombe sur notre position
+              {IsBombNear PosX PosY T {Append NearBombList H}}
+          elseif (PosX+Input.fire >= H.x andthen PosY == H.y) then %%Bombe a droite
+              {IsBombNear PosX PosY T {Append NearBombList H}}
+          elseif (PosX-Input.fire =< H.x andthen PosY == H.y) then %%Bombe à gauche
+              {IsBombNear PosX PosY T {Append NearBombList H}}
+          elseif (PosY+Input.fire >= H.y andthen PosX == H.x) then %%Bombe en haut
+              {IsBombNear PosX PosY T {Append NearBombList H}}
+          elseif (PosY-Input.fire =< H.y andthen PosX == H.x) then %%Bombe en bas
+              {IsBombNear PosX PosY T {Append NearBombList H}}
+          else
+              {IsBombNear PosX PosY T NearBombList}
+          end
+>>>>>>> aaaebe5f43a2a11c7de6062b72056006d2f182db
       [] nil then
 	 NearBombList
       end
