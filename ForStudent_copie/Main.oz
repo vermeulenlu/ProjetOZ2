@@ -160,28 +160,12 @@ define
 	    {Wait Pos}
 	    {Send GUI_Port initPlayer(ID)}
 	    {Send GUI_Port spawnPlayer(ID Pos)}
+	    {Send Game_Port spawnPlayer(ID Pos)}
 	    {Send Game_Port playerMoved(Pos ID.id)}
+	    {BroadCast spawnPlayer(ID Pos) 0}
 	    {Initit T}
 	 end
       [] nil then skip
-      end
-   end
-
-   fun{SeeHowManyPlayers List N}
-      case List of H|T then
-	 case {GetState H} of on then {SeeHowManyPlayers T N+1}
-	 [] off then {SeeHowManyPlayers T N}
-	 end
-      [] nil then N
-      end
-   end
-
-   fun{GetState Player}
-      local ID State in
-	 {Send Player.port getState(?ID ?State)}
-	 {Wait ID}
-	 {Wait State}
-	 State
       end
    end
 
@@ -269,8 +253,19 @@ define
       end
    end
 
+   fun{SeeHowManyPlayers GameState N}
+      case GameState of H|T then
+	 if(H.life>0) then
+	    {SeeHowManyPlayers T N+1}
+	 else
+	    {SeeHowManyPlayers T N}
+	 end
+      [] nil then N
+      end
+   end
+
    fun{GotHit Player GameState}
-      local ID Res ID2 Pos in
+      local ID Res ID2 Pos Res2 in
 	 {Send Player.port gotHit(?ID ?Res)}
 	 {Wait ID}
 	 {Wait Res}
@@ -278,14 +273,15 @@ define
 	 case Res of death(NewLife) then
 	    if(NewLife==0) then
 	       {Send GUI_Port lifeUpdate(ID NewLife)}
-	       {Record.adjoin Player player(life:NewLife)}
+	       {BroadCast deadPlayer(ID) 0}
+	       {Record.adjoin Player player(life:NewLife state:off)}
 	    else
-	       {Send Player.port spawn(?ID2 ?Pos)}
-	       {Wait ID2}
-	       {Wait Pos}
-	       {Send GUI_Port lifeUpdate(ID2 NewLife)}
-	       {Send GUI_Port spawnPlayer(ID2 Pos)}
-	       {Record.adjoin Player player(life:NewLife pos:Pos allowToPlay:{Alarm 1000})}
+	       {Send GUI_Port lifeUpdate(ID NewLife)}
+	       {Send Game_Port askSpawn(Player Res2)}
+	       {Wait Res2}
+	       {Send GUI_Port spawnPlayer(Player Res2)}
+	       {BroadCast deadPlayer(ID) 0}
+	       {Record.adjoin Player player(life:NewLife state:on needToSpawn:1)}
 	    end
 	 else
 	    Player
@@ -293,17 +289,21 @@ define
       end
    end
 
-   proc{EliminatePlayers Points N} GameState State in
+   proc{EliminatePlayers Points N} GameState State Res in
       {Send Game_Port askGameState(State)}
       {Wait State}
       GameState = {RetrieveListLast State N 1}
       case GameState of H|T then
 	 local Gone NewPlayer in
-	    Gone={IsPresent H.pos Points}
-	    if(Gone==true) then
-	       NewPlayer={GotHit H State}
-	       {Send Game_Port updatePlayer(NewPlayer)}
-	       {EliminatePlayers Points N+1}
+	    if(H.life>0) then
+	       Gone={IsPresent H.pos Points}
+	       if(Gone==true) then
+		  NewPlayer={GotHit H State}
+		  {Send Game_Port updatePlayer(NewPlayer)}
+		  {EliminatePlayers Points N+1}
+	       else
+		  {EliminatePlayers Points N+1}
+	       end
 	    else
 	       {EliminatePlayers Points N+1}
 	    end
@@ -319,6 +319,7 @@ define
       {Send GUI_Port hideBomb(PosBomb)}
       {Fiiire PointsToFire}
       {EliminatePlayers PointsToFire 0}
+      {BroadCast bombExploded(PosBomb) 0}
       {Delay 400}
       {HideFiiire PointsToFire}
       {Send Game_Port askBombList(BombList)}
@@ -363,6 +364,7 @@ define
       {Wait ID}
       {Wait Action}
       case Action of move(Pos) then
+	 {BroadCast movePlayer(ID Pos) 0}
 	 {Send GUI_Port movePlayer(ID Pos)}
 	 {Send Game_Port askPoints(Points)}
 	 {Wait Points}
@@ -411,21 +413,40 @@ define
       end
    end
 
-   proc{Run Players N} GameState in
+   proc{Run Players N} GameState GameState2 NewPlayer ID2 Pos Player in
       {Delay 300}
       case Players of H|T then
-	 {UpdateBomb H 0}
-	 {Send Game_Port askGameState(GameState)}
-	 {Wait GameState}
-	 case {GetState {List.nth GameState N}} of on then
-	    if({List.nth GameState N}.allowToPlay==unit) then
+	 if(H.needToSpawn==1) then
+	    {Send H.port spawn(?ID2 ?Pos)}
+	    {Wait ID2}
+	    {Wait Pos}
+	    NewPlayer={Record.adjoin H player(pos:Pos needToSpawn:0)}
+	    {BroadCast spawnPlayer(ID2 Pos) 0}
+	    {Send Game_Port updatePlayer(NewPlayer)}
+	    {UpdateBomb NewPlayer 0}
+	    {Send Game_Port askGameState(GameState)}
+	    {Wait GameState}
+	    if({List.nth GameState N}.life>0) then
 	       {MakeAction {List.nth GameState N}}
 	       {Run {RetrieveListLast GameState N 1} N+1}
-	    else
+	    else 
 	       {Run {RetrieveListLast GameState N 1} N+1}
 	    end
-	 [] off then
-	    {Run {RetrieveListLast GameState N 1} N+1}
+	 else
+	    {UpdateBomb H 0}
+	    {Send Game_Port askGameState(GameState)}
+	    {Wait GameState}
+	    Player =  {List.nth GameState N}
+	    if(Player.needToSpawn==1) then
+	       {Run {RetrieveListLast GameState N 1} N+1}
+	    else
+	       if({List.nth GameState N}.life>0) then
+		  {MakeAction {List.nth GameState N}}
+		  {Run {RetrieveListLast GameState N 1} N+1}
+	       else 
+		  {Run {RetrieveListLast GameState N 1} N+1}
+	       end
+	    end
 	 end
       [] nil then skip
       end
@@ -440,7 +461,7 @@ define
       if({SeeHowManyPlayers GameState2 0}>1) then  %% Le jeu comporte encore plus de un joueur
 	 {TurnByTurn}
       else
-	 skip %% A MODIFIER
+	 skip
       end
    end
 
@@ -475,23 +496,33 @@ define
    end
 
 
-   proc{RunThread Player} PlayerState Res2 in
+   proc{RunThread Player} PlayerState List NewPlayer Res2 ID Pos in
       {SimThink}
+      % {Send Game_Port askMyBombList(List Player)}
+      % {Wait List}
+      % {BombSim List}
       {Send Game_Port askPlayerState(PlayerState Player.id)}
       {Wait PlayerState}
-      case {GetState PlayerState} of on then
+      if(PlayerState.life>0) then
 	 {Send Game_Port askChange(Res2)}
 	 {Wait Res2}
-	 if(Res2==1) then {RunThread Player}
+	 if(Res2==1) then
+	    {RunThread PlayerState}
 	 else
-	    if(PlayerState.allowToPlay == unit) then
-	       {MakeAction Player}
-	       {RunThread Player}
+	    if(PlayerState.needToSpawn==1) then
+	       {Send PlayerState.port spawn(?ID ?Pos)}
+	       {Wait ID}
+	       {Wait Pos}
+	       NewPlayer={Record.adjoin PlayerState player(pos:Pos needToSpawn:0)}
+	       {Send Game_Port updatePlayer(NewPlayer)}
+	       {RunThread NewPlayer}
 	    else
-	       {RunThread Player}
+	       {MakeAction PlayerState}
+	       {RunThread PlayerState}
 	    end
 	 end
-      [] off then skip
+      else
+	 skip
       end
    end
 
@@ -507,8 +538,8 @@ define
       local Players in
 	 {Send Game_Port askGameState(Players)}
 	 {Wait Players}
-	 thread {UpdateBombSim} end
 	 {Launcher Players}
+	 thread {UpdateBombSim} end
       end
    end
 
