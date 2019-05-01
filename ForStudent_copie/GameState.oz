@@ -3,6 +3,8 @@ import
    Input
    Browser
    Projet2019util
+   OS
+   System(showInfo:Print)
 export
    portGameState:StartGameState
 define   
@@ -37,11 +39,47 @@ define
    
    fun{DefinePlayers List N}
       case List of H|T then
-	 player(id:N pos:_ score:0 life:Input.nbLives port:H allowToPlay:unit)|{DefinePlayers T N+1}
+	 player(id:N pos:_ score:0 state:on spawn:nil life:Input.nbLives port:H needToSpawn:0)|{DefinePlayers T N+1}
       [] nil then nil
       end
    end
 
+   fun{ChangeSpawn GameState Players ID Pos N} NewPlayer NewPlayers in
+      case Players of H|T then
+	 if(H.id == ID.id) then
+	    NewPlayer={Record.adjoin H player(spawn:Pos)}
+	    NewPlayers = {Replace GameState.players NewPlayer N 1}
+	    {Record.adjoin GameState gamestate(players:NewPlayers)}
+	 else
+	    {ChangeSpawn GameState T ID Pos N+1}
+	 end
+      [] nil then nil
+      end
+   end
+
+   proc{AskSpawn GameState ID Res}
+      case GameState of H|T then
+	 if(H.id == ID.id) then
+	    Res=H.spawn
+	 else
+	    {AskSpawn T ID Res}
+	 end
+      [] nil then skip
+      end
+   end
+
+   fun{MyBombs BombList ID}
+      case BombList of H|T then
+	 if(H.idBomber.id == ID.id) then
+	    H|{MyBombs T ID}
+	 else
+	    {MyBombs T ID}
+	 end
+      [] nil then
+	 {Print 'JE RENTRE DANS LE BOMBLIST'}
+	 nil
+      end
+   end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%% FONCTIONS COMPORTEMENTALES %%%%%%%%%%%%%%%%%%
@@ -150,6 +188,9 @@ in
       [] askBombList(BombList)|T then 
 	 BombList = GameState.bomblist
 	 {Sync T GameState}
+      [] askMyBombList(BombList ID)|T then 
+	 BombList = {MyBombs GameState.bomblist ID}
+	 {Sync T GameState}
       [] pointListChanged(Pos)|T then NewState in
 	 NewState = {UpdatePoints GameState Pos}
 	 {Sync T NewState}
@@ -183,6 +224,12 @@ in
       [] changing(Res)|T then NewState in
 	 NewState={Record.adjoin GameState gamestate(isChanging:Res)}
 	 {Sync T NewState}
+      [] spawnPlayer(ID Pos)|T then NewState in
+	 NewState={ChangeSpawn GameState GameState.players ID Pos 1}
+	 {Sync T NewState}
+      [] askSpawn(ID Res)|T then 
+	 {AskSpawn GameState.players ID Res}
+	 {Sync T GameState}
       end
    end
    

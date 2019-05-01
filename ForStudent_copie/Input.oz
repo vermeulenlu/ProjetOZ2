@@ -27,7 +27,7 @@ define
 in
 
 
-   IsTurnByTurn = false
+   IsTurnByTurn = true
    UseExtention = false
    PrintOK = true
 
@@ -47,7 +47,7 @@ in
 %%%% Players description %%%%
 
    NbBombers = 2
-   Bombers = [player000AI player000AI]
+   Bombers = [player033AI player033AI]
    ColorBombers = [red c(255 128 192)]%%green = luigi, red = mario, blue = toad et c(255 128 192) = peach
 
 %%%% Parameters %%%%
@@ -60,7 +60,7 @@ in
 
    Fire = 2
    TimingBomb = 3
-   TimingBombMin = 5000 % in millisecond
-   TimingBombMax = 6000 % in millisecond
+   TimingBombMin = 2000 % in millisecond
+   TimingBombMax = 3000 % in millisecond
 
 end

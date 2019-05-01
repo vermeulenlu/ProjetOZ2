@@ -2,8 +2,9 @@ functor
 import
    Player000bomber
    Player000name
-   Player000AI
-   Player005Arrows
+   Player033AI
+   Player105Cerbere
+   Player033DP
 export
    playerGenerator:PlayerGenerator
 define
@@ -13,8 +14,9 @@ in
       case Kind
       of player000bomber then {Player000bomber.portPlayer ID}
       [] player000name then {Player000name.portPlayer ID}
-      [] player000AI then {Player000AI.portPlayer ID}
-      [] player005Arrows then {Player005Arrows.portPindow ID}
+      [] player033AI then {Player033AI.portPlayer ID}
+      [] player105Cerbere then {Player105Cerbere.portPlayer ID}
+      [] player033DP then {Player033DP.portPlayer ID}
       else
          raise
             unknownedPlayer('Player not recognized by the PlayerManager '#Kind)
