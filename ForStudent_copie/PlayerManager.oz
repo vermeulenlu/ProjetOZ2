@@ -4,6 +4,7 @@ import
    Player000name
    Player033AI
    Player105Cerbere
+   Player033DP
 export
    playerGenerator:PlayerGenerator
 define
@@ -15,6 +16,7 @@ in
       [] player000name then {Player000name.portPlayer ID}
       [] player033AI then {Player033AI.portPlayer ID}
       [] player105Cerbere then {Player105Cerbere.portPlayer ID}
+      [] player033DP then {Player033DP.portPlayer ID}
       else
          raise
             unknownedPlayer('Player not recognized by the PlayerManager '#Kind)

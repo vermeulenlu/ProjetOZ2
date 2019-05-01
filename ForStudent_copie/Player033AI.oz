@@ -28,7 +28,7 @@ define
 %%%%%%%%%%%%%%%%%%%% Fonctions utiles %%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun{NewEtat ID}
-      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 spawn:nil pos:nil posBomb:nil map:Input.map)
+      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 spawn:nil points:nil pos:nil posBomb:nil map:Input.map)
    end
 
    fun{Length List N}
@@ -262,7 +262,7 @@ define
       end
    end
 
-   fun{SafePoint Etat Pos Range} Xsup Ysup Pos0 Pos1 Pos2 in
+   fun{SafePoint Etat Pos Range Sync} Xsup Ysup Pos0 Pos1 Pos2 in
       Xsup=[1 ~1 0 0]
       Ysup=[0 0 1 ~1]
       Pos0={CanIMove Etat Pos Range}
@@ -271,24 +271,28 @@ define
       if(Pos0==nil) then
 	 if(Pos1==nil) then
 	    if(Pos2==nil) then
+	       Sync=1
 	       Pos
 	    else
+	       Sync=0
 	       Pos2
 	    end
 	 else
+	    Sync=0
 	    Pos1
 	 end
       else
+	 Sync=0
 	 Pos0
       end
    end
 
-   fun{CanIEscape Etat Pos} Range2 NewPoints NewRange Res in
+   fun{CanIEscape Etat Pos} Range2 NewPoints NewRange Res Sync in
       Range2 = {Range Etat Etat.posBomb}
       NewPoints = {Append {Append {Append {Append {CheckRange Etat Pos.x Pos.y 0 1} {CheckRange Etat Pos.x Pos.y 0 ~1}} {CheckRange Etat Pos.x Pos.y 1 0}} {CheckRange Etat Pos.x Pos.y ~1 0}} [pt(x:Pos.x y:Pos.y)]}
       NewRange = {Append NewPoints Range2}
-      Res={SafePoint Etat Pos NewRange}
-      if(Res==nil) then
+      Res={SafePoint Etat Pos NewRange Sync}
+      if(Sync==1) then
 	 false
       else
 	 true
@@ -336,7 +340,7 @@ in
       end
    end
 
-   fun{Doaction Etat ID Action} NewEtat PosMenace PosMenace Pos NewPos Range2 in
+   fun{Doaction Etat ID Action} NewEtat PosMenace PosMenace Pos NewPos Range2 Sync in
       if(Etat.state==off) then
 	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
 	 ID=NewEtat.bomber
@@ -394,7 +398,7 @@ in
 	    end
 	 else % Je suis mencacé
 	    Range2 = {Range Etat Etat.posBomb}
-	    NewPos={SafePoint Etat Etat.pos Range2}
+	    NewPos={SafePoint Etat Etat.pos Range2 Sync}
 	    NewEtat={Record.adjoin Etat etat(pos:NewPos)}
 	    Pos=NewEtat.pos
 	    Action=move(Pos)
@@ -455,7 +459,7 @@ in
 	    PosX=Pos.x
 	    PosY=Pos.y
 	    NewMap = {Replace Etat.map {Replace {List.nth Etat.map Pos.y} 0 PosX 1} PosY 1} %%Change la map interne du joueur
-	    {Record.adjoin Etat etat(map:NewMap)} %%Renvoie l'etat avec la nouvelle map
+	    {Record.adjoin Etat etat(map:NewMap points:Pos|Etat.points)} %%Renvoie l'etat avec la nouvelle map
 	 end
       end
 

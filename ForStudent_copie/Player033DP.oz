@@ -51,6 +51,41 @@ define
       end
    end
 
+   fun{Try Etat Pos}
+	 local X Y RandX RandXsign RandY RandYsign Pos RandXX RandYY in
+	    X=Etat.pos.x
+	    Y=Etat.pos.y
+	    RandXX={OS.rand} mod 2
+	    RandYY={OS.rand} mod 2
+	    RandXsign = {OS.rand} mod 2
+	    RandYsign = {OS.rand} mod 2
+	    if(RandXsign==0) then
+	       RandX=(~RandXX)
+	    else
+	       RandX=RandXX
+	    end
+	    if(RandYsign==0) then
+	       RandY=(~RandYY)
+	    else
+	       RandY=RandYY
+	    end
+	    Pos = pt(x:X+RandX y:Y+RandY)
+	    if({List.nth {List.nth Etat.map Pos.y} Pos.x}==1 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x} ==2 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x}==3 ) then
+	       {Try Etat Pos}
+	    else
+	       if((RandX)*(RandY) == 0) then
+		  if(RandX+RandY == 0) then
+		     {Try Etat Pos}
+		  else
+		     Pos
+		  end
+	       else
+		  {Try Etat Pos}
+	       end
+	    end
+	 end
+      end
+
    fun{Replace List P N Count}
       case List of H|T then
 	 if(Count==N) then
@@ -262,7 +297,7 @@ define
       end
    end
 
-   fun{SafePoint Etat Pos Range} Xsup Ysup Pos0 Pos1 Pos2 in
+   fun{SafePoint Etat Pos Range Sync} Xsup Ysup Pos0 Pos1 Pos2 Xx Yy in
       Xsup=[1 ~1 0 0]
       Ysup=[0 0 1 ~1]
       Pos0={CanIMove Etat Pos Range}
@@ -271,25 +306,28 @@ define
       if(Pos0==nil) then
 	 if(Pos1==nil) then
 	    if(Pos2==nil) then
-	       nil
+	       Sync=0
+	       {Try Etat Pos}
 	    else
+	       Sync=1
 	       Pos2
 	    end
 	 else
+	    Sync=1
 	    Pos1
 	 end
       else
+	 Sync=1
 	 Pos0
       end
    end
 
-   fun{CanIEscape Etat Pos} Range2 NewPoints NewRange Res in
+   fun{CanIEscape Etat Pos} Range2 NewPoints NewRange Res Sync in
       Range2 = {Range Etat Etat.posBomb}
       NewPoints = {Append {Append {Append {Append {CheckRange Etat Pos.x Pos.y 0 1} {CheckRange Etat Pos.x Pos.y 0 ~1}} {CheckRange Etat Pos.x Pos.y 1 0}} {CheckRange Etat Pos.x Pos.y ~1 0}} [pt(x:Pos.x y:Pos.y)]}
       NewRange = {Append NewPoints Range2}
-      {Print 'LA TAILLE DE MA RANGE EST : '#{List.length NewRange}#''}
-      Res={SafePoint Etat Pos NewRange}
-      if(Res==nil) then
+      Res={SafePoint Etat Pos NewRange Sync}
+      if(Sync==0) then
 	 false
       else
 	 true
@@ -337,7 +375,7 @@ in
       end
    end
 
-   fun{Doaction Etat ID Action} NewEtat PosMenace PosMenace Pos NewPos Range2 in
+   fun{Doaction Etat ID Action} NewEtat PosMenace PosMenace Pos NewPos Range2 Sync in
       if(Etat.state==off) then
 	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
 	 ID=NewEtat.bomber
@@ -345,14 +383,10 @@ in
 	 NewEtat
       else
 	 ID = Etat.bomber
-	 {Print 'JE RECOMMENCE UNE NOUVELLE BOUCLE : '#ID.id#''}
 	 PosMenace = {Menace Etat Etat.pos}
 	 if(PosMenace==false) then % Je ne suis pas menacé
-	    {Print 'JE NE SUIS PAS MENACE'}
 	    if(Etat.bomb>0) then % J'ai encore des bombes en reserve
-	       {Print 'J AI ENCORE UNE BOMBE EN RESERVE'}
 	       if({CanIEscape Etat Etat.pos}) then % Je regarde si en posant une bombe, je peux m'echapper
-		  {Print 'JE PEUX M ECHAPPER EN POSANT UNE BOMBE'}
 		  if({GoingToDestroy Etat Etat.pos}) then % Je regarde si ma bombe va etre utile
 		     NewEtat={Bomb Etat Etat.pos}
 		     Pos=NewEtat.pos
@@ -361,12 +395,10 @@ in
 		  else % Ma bombe n'est pas utile, je tente donc un mouvement
 		     NewPos = {CanIMove Etat Etat.pos {Range Etat Etat.posBomb}}
 		     if(NewPos==nil) then % Je ne peux pas faire de mouvement sans m'exposer a une menace
-			{Print 'JE NE PEUX PAS FAIRE DE MOUVEMENT SANS M EXPOSER '}
 			Pos=Etat.pos
 			Action=move(Pos)
 			Etat
 		     else % Je peux bouger sans m'exposer
-			{Print 'JE PEUX BOUGER SANS M EXPOSER'}
 			NewEtat={Record.adjoin Etat etat(pos:NewPos)}
 			Pos=NewEtat.pos
 			Action=move(Pos)
@@ -374,15 +406,13 @@ in
 		     end
 		  end
 	       else % Je ne peux pas m'echapper si je pose une bombe, je tente alors de faire un mouvement
-		  {Print 'JE NE PEUX PAS M ECHAPPER EN POSANT UNE BOMBE'}
 		  NewPos = {CanIMove Etat Etat.pos {Range Etat Etat.posBomb}}
 		  if(NewPos==nil) then % Je ne peux pas faire de mouvement sans m'exposer a une menace
-		     {Print 'JE NE PEUX PAS FAIRE DE MOUVEMENT SANS M EXPOSER '}
-		     Pos=Etat.pos
+		     NewEtat={Record.adjoin Etat etat(pos:{Try Etat Etat.pos})}
+		     Pos=NewEtat.pos
 		     Action=move(Pos)
-		     Etat
+		     NewEtat
 		  else % Je peux bouger sans m'exposer
-		     {Print 'JE PEUX BOUGER SANS M EXPOSER'}
 		     NewEtat={Record.adjoin Etat etat(pos:NewPos)}
 		     Pos=NewEtat.pos
 		     Action=move(Pos)
@@ -390,15 +420,13 @@ in
 		  end
 	       end
 	    else % Je n'ai pas de bombe, je tente alors de faire un mouvement
-	       {Print 'JE N AI PLUS DE BOMBES EN RESERVE'}
 	       NewPos = {CanIMove Etat Etat.pos {Range Etat Etat.posBomb}}
 	       if(NewPos==nil) then % Je ne peux pas faire de mouvement sans m'exposer a une menace
-		  {Print 'JE NE PEUX PAS FAIRE DE MOUVEMENT SANS M EXPOSER '}
-		  Pos=Etat.pos
+		  NewEtat={Record.adjoin Etat etat(pos:{Try Etat Etat.pos})}
+		  Pos=NewEtat.pos
 		  Action=move(Pos)
-		  Etat
+		  NewEtat
 	       else % Je peux bouger sans m'exposer
-		  {Print 'JE PEUX BOUGER SANS M EXPOSER'}
 		  NewEtat={Record.adjoin Etat etat(pos:NewPos)}
 		  Pos=NewEtat.pos
 		  Action=move(Pos)
@@ -406,9 +434,8 @@ in
 	       end
 	    end
 	 else % Je suis mencacé
-	    {Print 'JE SUIS MENACE'}
 	    Range2 = {Range Etat Etat.posBomb}
-	    NewPos={SafePoint Etat Etat.pos Range2}
+	    NewPos={SafePoint Etat Etat.pos Range2 Sync}
 	    NewEtat={Record.adjoin Etat etat(pos:NewPos)}
 	    Pos=NewEtat.pos
 	    Action=move(Pos)
