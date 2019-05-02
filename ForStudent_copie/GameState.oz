@@ -81,6 +81,18 @@ define
       end
    end
 
+   fun{AlivePlayers Players N}
+      case Players of H|T then
+	 if(H.life==0) then
+	    {AlivePlayers T N}
+	 else
+	    {AlivePlayers T N+1}
+	 end
+      [] nil then
+	 N
+      end
+   end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%% FONCTIONS COMPORTEMENTALES %%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -229,6 +241,9 @@ in
 	 {Sync T NewState}
       [] askSpawn(ID Res)|T then 
 	 {AskSpawn GameState.players ID Res}
+	 {Sync T GameState}
+      [] alivePlayers(Res)|T then 
+	 Res={AlivePlayers GameState.players 0}
 	 {Sync T GameState}
       end
    end

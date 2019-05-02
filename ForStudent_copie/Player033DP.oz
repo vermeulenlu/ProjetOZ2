@@ -455,7 +455,7 @@ in
    end
 
    fun{GotHit Etat ID Res}
-      if(Etat.state==off) then
+      if(Etat.life==0) then
 	 ID=nil
 	 Res=nil
 	 {Record.adjoin Etat etat(bomber:nil)}
@@ -466,7 +466,7 @@ in
 	    if(NewLife==0) then
 	       NewEtat={Record.adjoin Etat etat(life:NewLife state:off)}
 	    else
-	       NewEtat={Record.adjoin Etat etat(life:NewLife)}
+	       NewEtat={Record.adjoin Etat etat(life:NewLife state:off)}
 	    end
 	    Res=death(NewLife)
 	    NewEtat

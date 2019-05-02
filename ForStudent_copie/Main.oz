@@ -42,6 +42,55 @@ define
       end
    end
 
+   fun{SearchBox List N}
+      case List of H|T then
+	 if(H==2 orelse H==3) then
+	    {SearchBox T N+1}
+	 else
+	    {SearchBox T N}
+	 end
+      [] nil then
+	 N
+      end
+   end
+
+   fun{NumberBox Map N} Res in
+      case Map of H|T then
+	 Res = {SearchBox H 0}
+	 {NumberBox T N+Res}
+      [] nil then
+	 N
+      end
+   end
+
+   fun{WhoIsWinner GameState} ID in
+      case GameState of H|T then
+	 if(H.life==0) then
+	    {WhoIsWinner T}
+	 else
+	    {Send H.port getId(ID)}
+	    {Wait ID}
+	    ID
+	 end
+      [] nil then
+	 nil
+      end
+   end
+
+   fun{HighestScore GameState Winner} ID in
+      case GameState of H|T then
+	 if(H.score>Winner.score) then
+	    {HighestScore T H}
+	 else
+	    {HighestScore T Winner}
+	 end
+      [] nil then
+	 {Send Winner.port getId(ID)}
+	 {Wait ID}
+	 ID
+      end
+   end
+
    fun{Ids Colors Name NId}
       if(NId >Input.nbBombers) then nil
       else
@@ -452,16 +501,24 @@ define
       end
    end
 
-   proc{TurnByTurn} GameState GameState2 in
+   proc{TurnByTurn} GameState GameState2 Winner Map in
       {Send Game_Port askGameState(GameState)}
       {Wait GameState}
       {Run GameState 1}
       {Send Game_Port askGameState(GameState2)}
       {Wait GameState2}
-      if({SeeHowManyPlayers GameState2 0}>1) then  %% Le jeu comporte encore plus de un joueur
+      {Send Game_Port askMap(Map)}
+      {Wait Map}
+      if({SeeHowManyPlayers GameState2 0}>1 andthen {NumberBox Map 0}>0) then  %% Le jeu comporte encore plus de un joueur
 	 {TurnByTurn}
       else
-	 skip
+	 if({SeeHowManyPlayers GameState2 0}==1) then %% Il ne reste qu'un joueur, il gagne
+	    Winner={WhoIsWinner GameState2}
+	    {Send GUI_Port displayWinner(Winner)}
+	 else  %% Il ne reste plus de joueurs ou plus de boxs, le gagnant est celui avec le plus grand nombre de points
+	       Winner = {HighestScore GameState2 GameState2.1}
+	       {Send GUI_Port displayWinner(Winner)}
+	 end
       end
    end
 
@@ -496,14 +553,15 @@ define
    end
 
 
-   proc{RunThread Player} PlayerState List NewPlayer Res2 ID Pos in
+   proc{RunThread Player} PlayerState List NewPlayer Res Res2 ID Pos Map in
       {SimThink}
-      % {Send Game_Port askMyBombList(List Player)}
-      % {Wait List}
-      % {BombSim List}
       {Send Game_Port askPlayerState(PlayerState Player.id)}
       {Wait PlayerState}
-      if(PlayerState.life>0) then
+      {Send Game_Port alivePlayers(Res)}
+      {Wait Res}
+      {Send Game_Port askMap(Map)}
+      {Wait Map}
+      if(PlayerState.life>0 andthen Res>1 andthen {NumberBox Map 0}>0) then
 	 {Send Game_Port askChange(Res2)}
 	 {Wait Res2}
 	 if(Res2==1) then
@@ -526,6 +584,25 @@ define
       end
    end
 
+   proc{NumberPlayers} GameState Winner in
+      {Delay 50}
+      {Send Game_Port askGameState(GameState)}
+      {Wait GameState}
+      if({SeeHowManyPlayers GameState 0}>1) then
+	 {NumberPlayers}
+      else
+	 if({SeeHowManyPlayers GameState 0}==1) then %% Il ne reste qu'un joueur, il gagne
+	    Winner={WhoIsWinner GameState}
+	    {Delay 500}
+	    {Send GUI_Port displayWinner(Winner)}
+	 else
+	    Winner = {HighestScore GameState GameState.1}
+	    {Delay 500}
+	    {Send GUI_Port displayWinner(Winner)}
+	 end
+      end
+   end
+
    proc{Simultaneous}
       proc{Launcher List}
 	 case List of nil then skip
@@ -540,6 +617,7 @@ define
 	 {Wait Players}
 	 {Launcher Players}
 	 thread {UpdateBombSim} end
+	 thread {NumberPlayers} end
       end
    end
 
