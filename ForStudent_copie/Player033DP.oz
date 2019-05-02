@@ -28,7 +28,7 @@ define
 %%%%%%%%%%%%%%%%%%%% Fonctions utiles %%%%%%%%%%%%%%%%%%%%%%%%%%
 
    fun{NewEtat ID}
-      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 spawn:nil pos:nil posBomb:nil map:Input.map)
+      etat(bomber:ID state:on life:Input.nbLives score:0 bomb:1 spawn:nil points:nil pos:nil posBomb:nil map:Input.map)
    end
 
    fun{Length List N}
@@ -52,39 +52,39 @@ define
    end
 
    fun{Try Etat Pos}
-	 local X Y RandX RandXsign RandY RandYsign Pos RandXX RandYY in
-	    X=Etat.pos.x
-	    Y=Etat.pos.y
-	    RandXX={OS.rand} mod 2
-	    RandYY={OS.rand} mod 2
-	    RandXsign = {OS.rand} mod 2
-	    RandYsign = {OS.rand} mod 2
-	    if(RandXsign==0) then
-	       RandX=(~RandXX)
-	    else
-	       RandX=RandXX
-	    end
-	    if(RandYsign==0) then
-	       RandY=(~RandYY)
-	    else
-	       RandY=RandYY
-	    end
-	    Pos = pt(x:X+RandX y:Y+RandY)
-	    if({List.nth {List.nth Etat.map Pos.y} Pos.x}==1 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x} ==2 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x}==3 ) then
-	       {Try Etat Pos}
-	    else
-	       if((RandX)*(RandY) == 0) then
-		  if(RandX+RandY == 0) then
-		     {Try Etat Pos}
-		  else
-		     Pos
-		  end
-	       else
+      local X Y RandX RandXsign RandY RandYsign Pos RandXX RandYY in
+	 X=Etat.pos.x
+	 Y=Etat.pos.y
+	 RandXX={OS.rand} mod 2
+	 RandYY={OS.rand} mod 2
+	 RandXsign = {OS.rand} mod 2
+	 RandYsign = {OS.rand} mod 2
+	 if(RandXsign==0) then
+	    RandX=(~RandXX)
+	 else
+	    RandX=RandXX
+	 end
+	 if(RandYsign==0) then
+	    RandY=(~RandYY)
+	 else
+	    RandY=RandYY
+	 end
+	 Pos = pt(x:X+RandX y:Y+RandY)
+	 if({List.nth {List.nth Etat.map Pos.y} Pos.x}==1 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x} ==2 orelse {List.nth {List.nth Etat.map Pos.y} Pos.x}==3 ) then
+	    {Try Etat Pos}
+	 else
+	    if((RandX)*(RandY) == 0) then
+	       if(RandX+RandY == 0) then
 		  {Try Etat Pos}
+	       else
+		  Pos
 	       end
+	    else
+	       {Try Etat Pos}
 	    end
 	 end
       end
+   end
 
    fun{Replace List P N Count}
       case List of H|T then
@@ -345,6 +345,229 @@ define
       {Record.adjoin Etat etat(bomb:Etat.bomb-1)}
    end
 
+   fun{Near Points Pos Point N} Res in
+      case Points of H|T then
+	 Res = {Sqrt ((Pos.x-H.x)*(Pos.x-H.x)+(Pos.y-H.y)*(Pos.y-H.y))}
+	 if(Res<N) then
+	    {Near T Pos H Res}
+	 else
+	    {Near T Pos Point N}
+	 end
+      [] nil then Point
+      end
+   end
+
+   fun{Smaller List SourceRes}
+      case List of H|T then
+	 if(H.n<SourceRes.n) then
+	    {Smaller T H}
+	 else
+	    {Smaller T SourceRes}
+	 end
+      [] nil then
+	 SourceRes
+      end
+   end
+
+   fun{OnAPoint Pos PosPoints}
+      case PosPoints of H|T then
+	 if(H.x==Pos.x) then
+	    if(H.y==Pos.y) then
+	       true
+	    else
+	       {OnAPoint Pos T}
+	    end
+	 else
+	    {OnAPoint Pos T}
+	 end
+      [] nil then
+	 false
+      end
+   end
+
+   fun{CheckOneDirection2 Source Etat Map Pos Xsup Ysup N}
+      local X Y NewPos in
+	 X=Pos.x
+	 Y=Pos.y
+	 NewPos=pt(x:X+Xsup y:Y+Ysup)
+	 if(Input.nbRow < NewPos.y orelse Input.nbColumn < NewPos.x  orelse NewPos.x=<0 orelse NewPos.y =<0) then
+	    nil
+	 else
+	    if({List.nth {List.nth Map NewPos.y} NewPos.x}.val==1 orelse {List.nth {List.nth Map NewPos.y} NewPos.x}.val==2 orelse {List.nth {List.nth Map NewPos.y} NewPos.x}.val==3 orelse {List.nth {List.nth Map NewPos.y} NewPos.x}.poids==1) then %% Je ne peux pas aller sur cette position, soit parce que c'est une box ou un mur, soit parce que j'y suis deja passé
+	       nil
+	    else
+	       {CheckBFS Etat Map Source NewPos N}
+	    end
+	 end
+      end
+   end
+
+   fun{CheckVoisins Etat Map Source Pos N} NewPos1 NewPos2 NewPos3 NewPos4 in
+      NewPos1={CheckOneDirection2 Source Etat Map Pos ~1 0 N}
+      NewPos2={CheckOneDirection2 Source Etat Map Pos 1 0 N}
+      NewPos3={CheckOneDirection2 Source Etat Map Pos 0 ~1 N}
+      NewPos4={CheckOneDirection2 Source Etat Map Pos 0 1 N}
+      if(NewPos1==nil) then
+	 if(NewPos2==nil) then
+	    if(NewPos3==nil) then
+	       if(NewPos4==nil) then nil
+	       else
+		  NewPos4
+	       end
+	    else
+	       if(NewPos4==nil) then NewPos3
+	       else
+		  {Smaller NewPos3|NewPos4|nil NewPos3}
+	       end
+	    end
+	 else
+	    if(NewPos3== nil andthen NewPos4==nil) then NewPos2
+	    else
+	       if(NewPos3==nil) then
+		  {Smaller NewPos2|NewPos4|nil NewPos2}
+	       elseif(NewPos4==nil) then
+		  {Smaller NewPos2|NewPos3|nil NewPos2}
+	       else
+		  {Smaller NewPos2|NewPos4|NewPos3|nil NewPos2}
+	       end
+	    end
+	 end
+      else
+	 if(NewPos2== nil andthen NewPos3==nil andthen NewPos4==nil) then NewPos1
+	 else
+	    if(NewPos3==nil andthen NewPos2==nil) then
+	       {Smaller NewPos1|NewPos4|nil NewPos1}
+	    elseif(NewPos4==nil andthen NewPos2==nil) then
+	       {Smaller NewPos1|NewPos3|nil NewPos1}
+	    elseif(NewPos3==nil andthen NewPos4==nil) then
+	       {Smaller NewPos1|NewPos2|nil NewPos1}
+	    elseif(NewPos2==nil) then
+	       {Smaller NewPos1|NewPos3|NewPos4|nil NewPos1}
+	    elseif(NewPos3==nil) then
+	       {Smaller NewPos1|NewPos2|NewPos4|nil NewPos1}
+	    elseif(NewPos4==nil) then
+	       {Smaller NewPos1|NewPos3|NewPos2|nil NewPos1}
+	    else
+	       {Smaller NewPos1|NewPos3|NewPos2|NewPos4|nil NewPos1}
+	    end
+	 end
+      end	 
+   end
+
+   fun{CheckBFS Etat Map Source Pos N} NewMap in
+      if({OnAPoint Pos Etat.points}) then
+	 bfs(source:Source n:N)
+      else
+	 NewMap = {ChangePoids Map Pos 1}
+	 {CheckVoisins Etat NewMap Source Pos N+1}
+      end
+   end
+
+   fun{CheckOneDirection Source Etat Map Pos Xsup Ysup N}
+      local X Y NewPos in
+	 X=Pos.x
+	 Y=Pos.y
+	 NewPos=pt(x:X+Xsup y:Y+Ysup)
+	 if(Input.nbRow < NewPos.y orelse Input.nbColumn < NewPos.x  orelse NewPos.x=<0 orelse NewPos.y =<0) then
+	    nil
+	 else
+	    if({List.nth {List.nth Map NewPos.y} NewPos.x}.val==1 orelse {List.nth {List.nth Map NewPos.y} NewPos.x}.val==2 orelse {List.nth {List.nth Map NewPos.y} NewPos.x}.val==3 orelse {List.nth {List.nth Map NewPos.y} NewPos.x}.poids==1 orelse {Check NewPos {Range Etat Etat.posBomb}}==true) then %% Je ne peux pas aller sur cette position, soit parce que c'est une box ou un mur, soit parce que j'y suis deja passé soit parce que le point est menacé
+	       nil
+	    else
+	       {CheckBFS Etat Map Source NewPos N}
+	    end
+	 end
+      end
+   end
+
+   fun{BeginBFS Etat Pos Map} NewMap NewPos1 NewPos2 NewPos3 NewPos4 in
+      NewMap = {ChangePoids Map Pos 1}
+      NewPos1={CheckOneDirection pt(x:Pos.x-1 y:Pos.y) Etat NewMap Pos ~1 0 1}
+      NewPos2={CheckOneDirection pt(x:Pos.x+1 y:Pos.y) Etat NewMap Pos 1 0 1}
+      NewPos3={CheckOneDirection pt(x:Pos.x y:Pos.y-1) Etat NewMap Pos 0 ~1 1}
+      NewPos4={CheckOneDirection pt(x:Pos.x y:Pos.y+1) Etat NewMap Pos 0 1 1}
+      if(NewPos1==nil) then
+	 if(NewPos2==nil) then
+	    if(NewPos3==nil) then
+	       if(NewPos4==nil) then nil %% Pas de points a aller chercher
+	       else
+		  NewPos4
+	       end
+	    else
+	       if(NewPos4==nil) then NewPos3
+	       else
+		  {Smaller NewPos3|NewPos4|nil NewPos3}
+	       end
+	    end
+	 else
+	    if(NewPos3== nil andthen NewPos4==nil) then NewPos2
+	    else
+	       if(NewPos3==nil) then
+		  {Smaller NewPos2|NewPos4|nil NewPos2}
+	       elseif(NewPos4==nil) then
+		  {Smaller NewPos2|NewPos3|nil NewPos2}
+	       else
+		  {Smaller NewPos2|NewPos4|NewPos3|nil NewPos2}
+	       end
+	    end
+	 end
+      else
+	 if(NewPos2== nil andthen NewPos3==nil andthen NewPos4==nil) then NewPos1
+	 else
+	    if(NewPos3==nil andthen NewPos2==nil) then
+	       {Smaller NewPos1|NewPos4|nil NewPos1}
+	    elseif(NewPos4==nil andthen NewPos2==nil) then
+	       {Smaller NewPos1|NewPos3|nil NewPos1}
+	    elseif(NewPos3==nil andthen NewPos4==nil) then
+	       {Smaller NewPos1|NewPos2|nil NewPos1}
+	    elseif(NewPos2==nil) then
+	       {Smaller NewPos1|NewPos3|NewPos4|nil NewPos1}
+	    elseif(NewPos3==nil) then
+	       {Smaller NewPos1|NewPos2|NewPos4|nil NewPos1}
+	    elseif(NewPos4==nil) then
+	       {Smaller NewPos1|NewPos3|NewPos2|nil NewPos1}
+	    else
+	       {Smaller NewPos1|NewPos3|NewPos2|NewPos4|nil NewPos1}
+	    end
+	 end
+      end	 
+   end
+   
+   fun{Put0 List TotList N} NewList in
+      case List of H|T then
+	 NewList={Replace TotList node(val:H poids:0) N 1}
+	 {Put0 T NewList N+1}
+      [] nil then
+	 TotList
+      end
+   end
+
+   fun{NulBFS Map FinalMap N} NewLine NewMap in
+      case Map of H|T then
+	 NewLine={Put0 H H 1}
+	 NewMap={Replace FinalMap NewLine N 1}
+	 {NulBFS T NewMap N+1}
+      [] nil then
+	 FinalMap
+      end
+   end
+
+   fun{ChangePoids Map Pos Value} ValeurPos in
+      ValeurPos = {List.nth {List.nth Map Pos.y} Pos.x}.val
+      {Replace Map {Replace {List.nth Map Pos.y} node(val:ValeurPos poids:Value) Pos.x 1} Pos.y 1}
+   end
+
+
+   fun{LookingForPoints Etat Points Pos} NewPos MapPoids in
+      MapPoids = {NulBFS Etat.map Etat.map 1}
+      NewPos={BeginBFS Etat Pos MapPoids}
+      if(NewPos==nil) then
+	 nil
+      else
+	 NewPos.source
+      end
+   end
+
 in
 %%%%%%%%%%%%%%%%%%%% Fonctions comportementales %%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -375,9 +598,9 @@ in
       end
    end
 
-   fun{Doaction Etat ID Action} NewEtat PosMenace PosMenace Pos NewPos Range2 Sync in
+   fun{Doaction Etat ID Action} NewEtat PosMenace PosMenace Pos NewPos Range2 Sync PosForPoints in
       if(Etat.state==off) then
-	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
+	 NewEtat = {Record.adjoin Etat etat(action:null bomber:null)}
 	 ID=NewEtat.bomber
 	 Action=NewEtat.action
 	 NewEtat
@@ -385,19 +608,36 @@ in
 	 ID = Etat.bomber
 	 PosMenace = {Menace Etat Etat.pos}
 	 if(PosMenace==false) then % Je ne suis pas menacé
-	    if(Etat.bomb>0) then % J'ai encore des bombes en reserve
-	       if({CanIEscape Etat Etat.pos}) then % Je regarde si en posant une bombe, je peux m'echapper
-		  if({GoingToDestroy Etat Etat.pos}) then % Je regarde si ma bombe va etre utile
-		     NewEtat={Bomb Etat Etat.pos}
-		     Pos=NewEtat.pos
-		     Action=bomb(Pos)
-		     NewEtat
-		  else % Ma bombe n'est pas utile, je tente donc un mouvement
+	    PosForPoints={LookingForPoints Etat Etat.points Etat.pos}
+	    if(PosForPoints==nil) then %% Je ne dois pas aller chercher des points 
+	       if(Etat.bomb>0) then % J'ai encore des bombes en reserve
+		  if({CanIEscape Etat Etat.pos}) then % Je regarde si en posant une bombe, je peux m'echapper
+		     if({GoingToDestroy Etat Etat.pos}) then % Je regarde si ma bombe va etre utile
+			NewEtat={Bomb Etat Etat.pos}
+			Pos=NewEtat.pos
+			Action=bomb(Pos)
+			NewEtat
+		     else % Ma bombe n'est pas utile, je tente donc un mouvement
+			NewPos = {CanIMove Etat Etat.pos {Range Etat Etat.posBomb}}
+			if(NewPos==nil) then % Je ne peux pas faire de mouvement sans m'exposer a une menace
+			   NewEtat={Record.adjoin Etat etat(pos:{Try Etat Etat.pos})}
+			   Pos=NewEtat.pos
+			   Action=move(Pos)
+			   NewEtat
+			else % Je peux bouger sans m'exposer
+			   NewEtat={Record.adjoin Etat etat(pos:NewPos)}
+			   Pos=NewEtat.pos
+			   Action=move(Pos)
+			   NewEtat
+			end
+		     end
+		  else % Je ne peux pas m'echapper si je pose une bombe, je tente alors de faire un mouvement
 		     NewPos = {CanIMove Etat Etat.pos {Range Etat Etat.posBomb}}
 		     if(NewPos==nil) then % Je ne peux pas faire de mouvement sans m'exposer a une menace
-			Pos=Etat.pos
+			NewEtat={Record.adjoin Etat etat(pos:{Try Etat Etat.pos})}
+			Pos=NewEtat.pos
 			Action=move(Pos)
-			Etat
+			NewEtat
 		     else % Je peux bouger sans m'exposer
 			NewEtat={Record.adjoin Etat etat(pos:NewPos)}
 			Pos=NewEtat.pos
@@ -405,7 +645,7 @@ in
 			NewEtat
 		     end
 		  end
-	       else % Je ne peux pas m'echapper si je pose une bombe, je tente alors de faire un mouvement
+	       else % Je n'ai pas de bombe, je tente alors de faire un mouvement
 		  NewPos = {CanIMove Etat Etat.pos {Range Etat Etat.posBomb}}
 		  if(NewPos==nil) then % Je ne peux pas faire de mouvement sans m'exposer a une menace
 		     NewEtat={Record.adjoin Etat etat(pos:{Try Etat Etat.pos})}
@@ -419,19 +659,11 @@ in
 		     NewEtat
 		  end
 	       end
-	    else % Je n'ai pas de bombe, je tente alors de faire un mouvement
-	       NewPos = {CanIMove Etat Etat.pos {Range Etat Etat.posBomb}}
-	       if(NewPos==nil) then % Je ne peux pas faire de mouvement sans m'exposer a une menace
-		  NewEtat={Record.adjoin Etat etat(pos:{Try Etat Etat.pos})}
-		  Pos=NewEtat.pos
-		  Action=move(Pos)
-		  NewEtat
-	       else % Je peux bouger sans m'exposer
-		  NewEtat={Record.adjoin Etat etat(pos:NewPos)}
-		  Pos=NewEtat.pos
-		  Action=move(Pos)
-		  NewEtat
-	       end
+	    else %% Je peux aller chercher un point
+	       NewEtat={Record.adjoin Etat etat(pos:PosForPoints)}
+	       Pos=NewEtat.pos
+	       Action=move(Pos)
+	       NewEtat
 	    end
 	 else % Je suis mencacé
 	    Range2 = {Range Etat Etat.posBomb}
@@ -443,6 +675,7 @@ in
 	 end
       end
    end
+
 
    fun{Add Etat Type Option Res}
       case Type of bomb then
@@ -478,7 +711,11 @@ in
       case Message of spawnPlayer(ID Pos) %% Player <bomber> ID has spawn in <position> Pos
       then Etat %%Useless pour la version random
       [] movePlayer(ID Pos) %% Player <bomber> ID has move to <position> Pos
-      then Etat %%Useless pour la version random
+      then
+	 local NewPointList in
+	    NewPointList = {Retire Pos Etat.points}
+	    {Record.adjoin Etat etat(points:NewPointList)}
+	 end
       [] deadPlayer(ID)%% Player <bomber> ID has died
       then Etat %%Useless pour la version random
       [] bombPlanted(Pos)%% Bomb has been planted at <position> Pos
@@ -496,7 +733,7 @@ in
 	    PosX=Pos.x
 	    PosY=Pos.y
 	    NewMap = {Replace Etat.map {Replace {List.nth Etat.map Pos.y} 0 PosX 1} PosY 1} %%Change la map interne du joueur
-	    {Record.adjoin Etat etat(map:NewMap)} %%Renvoie l'etat avec la nouvelle map
+	    {Record.adjoin Etat etat(map:NewMap points:Pos|Etat.points)} %%Renvoie l'etat avec la nouvelle map
 	 end
       end
 

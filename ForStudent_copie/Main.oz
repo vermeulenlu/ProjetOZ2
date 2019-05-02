@@ -445,6 +445,7 @@ define
 	         {Send Game_Port playerMoved(Pos ID.id)}
 	       end
       [] bomb(Pos) then NewBombList BombList in
+<<<<<<< HEAD
 	       {Send GUI_Port spawnBomb(Pos)}
 	       {Send Game_Port askBombList(BombList)}
 	       {Wait BombList}
@@ -458,6 +459,21 @@ define
 	           {Send Game_Port bombListChanged(NewBombList)}
 	       end
       [] nil then skip
+=======
+	 {Send GUI_Port spawnBomb(Pos)}
+	 {Send Game_Port askBombList(BombList)}
+	 {Wait BombList}
+	 if(Input.isTurnByTurn) then
+	    NewBombList = bomb(pos:Pos time:Input.timingBomb idBomber:ID idBomb:{OS.rand})|BombList
+	    {BroadCast bombPlanted(Pos) 0}
+	    {Send Game_Port bombListChanged(NewBombList)}
+	 else
+	    NewBombList = bomb(pos:Pos time:{Alarm Input.timingBombMin+({OS.rand} mod (Input.timingBombMax-Input.timingBombMin))} idBomber:ID idBomb:{OS.rand})|BombList
+	    {BroadCast bombPlanted(Pos) 0}
+	    {Send Game_Port bombListChanged(NewBombList)}
+	 end
+      [] null then skip
+>>>>>>> 739aa9eb8402f13a43e35556ad9ee419e90f60f7
       end
    end
 
@@ -592,11 +608,11 @@ define
       else
 	 if({SeeHowManyPlayers GameState 0}==1) then %% Il ne reste qu'un joueur, il gagne
 	    Winner={WhoIsWinner GameState}
-	    {Delay 500}
+	    {Delay 1000}
 	    {Send GUI_Port displayWinner(Winner)}
 	 else
 	    Winner = {HighestScore GameState GameState.1}
-	    {Delay 500}
+	    {Delay 1000}
 	    {Send GUI_Port displayWinner(Winner)}
 	 end
       end
@@ -631,7 +647,11 @@ in
    GUI_Port = {GUI.portWindow}
    {Send GUI_Port buildWindow}
 %%%%%%%%%%%%%%%%%%%% Initialisation des Bombers %%%%%%%%%%%%%%%%%%%%%%%
+<<<<<<< HEAD
    ListID = {Ids Input.colorsBombers [mario luigi toad peach mario luigi toad peach] 1}
+=======
+   ListID = {Ids Input.colorsBombers [lucas jerem m k a t] 1}
+>>>>>>> 739aa9eb8402f13a43e35556ad9ee419e90f60f7
    ListBombers = {GenerateBombers Input.bombers ListID}
    Game_Port = {GameState.portGameState ListBombers}
    {Initit ListBombers}
