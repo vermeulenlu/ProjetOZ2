@@ -15,8 +15,8 @@ compile:	compilePlayer PlayerManager.oz GUI.oz GameState.oz Main.oz
 Input.ozf: Input.oz
 	ozc.exe -c Input.oz
 
-compilePlayer:	Player000name.oz Player033AI.oz Player033DP.oz
-	ozc.exe -c Player000name.oz Player033AI.oz Player033DP.oz
+compilePlayer:	Player033name.oz Player033AI.oz Player033DP.oz
+	ozc.exe -c Player033name.oz Player033AI.oz Player033DP.oz
 
 *.ozf :
 

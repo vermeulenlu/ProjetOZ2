@@ -330,13 +330,13 @@ in
 
    fun{Spawn Etat ID Pos}
       if(Etat.life>0) then
-	 ID=Etat.bomber
-	 Pos=Etat.spawn
-	 {Record.adjoin Etat etat(pos:Pos state:on)}
+	       ID=Etat.bomber
+	       Pos=Etat.spawn
+	       {Record.adjoin Etat etat(pos:Pos state:on)}
       else
-	 ID=nil
-	 Pos=nil
-	 {Record.adjoin Etat etat(pos:nil state:off)}
+      	 ID=nil
+	       Pos=nil
+	       {Record.adjoin Etat etat(pos:nil state:off)}
       end
    end
 
@@ -419,14 +419,14 @@ in
 
    fun{GotHit Etat ID Res}
       if(Etat.state==off) then
-	 ID=nil
-	 Res=nil
-	 {Record.adjoin Etat etat(bomber:nil)}
+	       ID=nil
+	       Res=nil
+	       {Record.adjoin Etat etat(bomber:nil)}
       else
 	 ID=Etat.bomber
 	 local NewLife NewEtat in
 	    NewLife=Etat.life-1
-	    if(NewLife==0) then
+	    if(NewLife=<0) then
 	       NewEtat={Record.adjoin Etat etat(life:NewLife state:off)}
 	    else
 	       NewEtat={Record.adjoin Etat etat(life:NewLife)}

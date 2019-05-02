@@ -320,10 +320,10 @@ define
 	 {Wait Res}
 	 {Send GUI_Port hidePlayer(ID)}
 	 case Res of death(NewLife) then
-	    if(NewLife==0) then
-	       {Send GUI_Port lifeUpdate(ID NewLife)}
+	    if(NewLife=<0) then
+	       {Send GUI_Port lifeUpdate(ID 0)}
 	       {BroadCast deadPlayer(ID) 0}
-	       {Record.adjoin Player player(life:NewLife state:off)}
+	       {Record.adjoin Player player(life:0 state:off)}
 	    else
 	       {Send GUI_Port lifeUpdate(ID NewLife)}
 	       {Send Game_Port askSpawn(Player Res2)}
@@ -413,51 +413,50 @@ define
       {Wait ID}
       {Wait Action}
       case Action of move(Pos) then
-	 {BroadCast movePlayer(ID Pos) 0}
-	 {Send GUI_Port movePlayer(ID Pos)}
-	 {Send Game_Port askPoints(Points)}
-	 {Wait Points}
-	 {Send Game_Port askBonus(Bonus)}
-	 {Wait Bonus}
-	 if({IsPresent Pos Points}) then NewPoints in %% Point
-	    NewPoints={Retire Pos Points}
-	    {Send Game_Port pointListChanged(NewPoints)}
-	    {Send GUI_Port hidePoint(Pos)}
-	    {Send Player.port add(point 1 ?Res)}
-	    {Wait Res}
-	    {Send GUI_Port scoreUpdate(ID Res)}
-	    {Send Game_Port playerMoved(Pos ID.id)}
-	 elseif({IsPresent Pos Bonus}) then NewBonus in %% Bonus
-	    NewBonus={Retire Pos Bonus}
-	    {Send Game_Port bonusListChanged(NewBonus)}
-	    {Send GUI_Port hideBonus(Pos)}
-	    if(({OS.rand} mod 2)==0)  then
-	       {Send Player.port add(point 10 ?Res)}
-	       {Wait Res}
-	       {Send GUI_Port scoreUpdate(ID Res)}
-	       {Send Game_Port playerMoved(Pos ID.id)}
-	    else
-
-	       {Send Player.port add(bomb 1 ?Res)}
-	       {Wait Res}
-	       {Send Game_Port playerMoved(Pos ID.id)}
-	    end
-	 else
-	    {Send Game_Port playerMoved(Pos ID.id)}
-	 end
+	       {BroadCast movePlayer(ID Pos) 0}
+	       {Send GUI_Port movePlayer(ID Pos)}
+	       {Send Game_Port askPoints(Points)}
+	       {Wait Points}
+	       {Send Game_Port askBonus(Bonus)}
+	       {Wait Bonus}
+	       if({IsPresent Pos Points}) then NewPoints in %% Point
+	         NewPoints={Retire Pos Points}
+	         {Send Game_Port pointListChanged(NewPoints)}
+	         {Send GUI_Port hidePoint(Pos)}
+	         {Send Player.port add(point 1 ?Res)}
+	         {Wait Res}
+	         {Send GUI_Port scoreUpdate(ID Res)}
+	         {Send Game_Port playerMoved(Pos ID.id)}
+	       elseif({IsPresent Pos Bonus}) then NewBonus in %% Bonus
+	         NewBonus={Retire Pos Bonus}
+	         {Send Game_Port bonusListChanged(NewBonus)}
+	         {Send GUI_Port hideBonus(Pos)}
+	         if(({OS.rand} mod 2)==0)  then
+	           {Send Player.port add(point 10 ?Res)}
+	           {Wait Res}
+	           {Send GUI_Port scoreUpdate(ID Res)}
+	           {Send Game_Port playerMoved(Pos ID.id)}
+	         else
+	           {Send Player.port add(bomb 1 ?Res)}
+	           {Wait Res}
+	           {Send Game_Port playerMoved(Pos ID.id)}
+	         end
+	       else
+	         {Send Game_Port playerMoved(Pos ID.id)}
+	       end
       [] bomb(Pos) then NewBombList BombList in
-	 {Send GUI_Port spawnBomb(Pos)}
-	 {Send Game_Port askBombList(BombList)}
-	 {Wait BombList}
-	 if(Input.isTurnByTurn) then
-	    NewBombList = bomb(pos:Pos time:Input.timingBomb idBomber:ID idBomb:{OS.rand})|BombList
-	    {BroadCast bombPlanted(Pos) 0}
-	    {Send Game_Port bombListChanged(NewBombList)}
-	 else
-	    NewBombList = bomb(pos:Pos time:{Alarm Input.timingBombMin+({OS.rand} mod (Input.timingBombMax-Input.timingBombMin))} idBomber:ID idBomb:{OS.rand})|BombList
-	    {BroadCast bombPlanted(Pos) 0}
-	    {Send Game_Port bombListChanged(NewBombList)}
-	 end
+	       {Send GUI_Port spawnBomb(Pos)}
+	       {Send Game_Port askBombList(BombList)}
+	       {Wait BombList}
+	       if(Input.isTurnByTurn) then
+	           NewBombList = bomb(pos:Pos time:Input.timingBomb idBomber:ID idBomb:{OS.rand})|BombList
+	           {BroadCast bombPlanted(Pos) 0}
+	           {Send Game_Port bombListChanged(NewBombList)}
+	       else
+	           NewBombList = bomb(pos:Pos time:{Alarm Input.timingBombMin+({OS.rand} mod (Input.timingBombMax-Input.timingBombMin))} idBomber:ID idBomb:{OS.rand})|BombList
+	           {BroadCast bombPlanted(Pos) 0}
+	           {Send Game_Port bombListChanged(NewBombList)}
+	       end
       [] nil then skip
       end
    end
@@ -632,7 +631,7 @@ in
    GUI_Port = {GUI.portWindow}
    {Send GUI_Port buildWindow}
 %%%%%%%%%%%%%%%%%%%% Initialisation des Bombers %%%%%%%%%%%%%%%%%%%%%%%
-   ListID = {Ids Input.colorsBombers [mario luigi peach toad] 1}
+   ListID = {Ids Input.colorsBombers [mario luigi toad peach mario luigi toad peach] 1}
    ListBombers = {GenerateBombers Input.bombers ListID}
    Game_Port = {GameState.portGameState ListBombers}
    {Initit ListBombers}
