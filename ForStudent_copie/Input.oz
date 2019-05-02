@@ -27,7 +27,7 @@ define
 in
 
 
-   IsTurnByTurn = false
+   IsTurnByTurn = true
    UseExtention = false
    PrintOK = true
 

@@ -330,7 +330,7 @@ define
 	       {Wait Res2}
 	       {Send GUI_Port spawnPlayer(Player Res2)}
 	       {BroadCast deadPlayer(ID) 0}
-	       {Record.adjoin Player player(life:NewLife state:on needToSpawn:1)}
+	       {Record.adjoin Player player(life:NewLife state:off needToSpawn:1)}
 	    end
 	 else
 	    Player
@@ -344,7 +344,7 @@ define
       GameState = {RetrieveListLast State N 1}
       case GameState of H|T then
 	 local Gone NewPlayer in
-	    if(H.life>0) then
+	    case H.state of on then
 	       Gone={IsPresent H.pos Points}
 	       if(Gone==true) then
 		  NewPlayer={GotHit H State}
@@ -469,7 +469,7 @@ define
 	    {Send H.port spawn(?ID2 ?Pos)}
 	    {Wait ID2}
 	    {Wait Pos}
-	    NewPlayer={Record.adjoin H player(pos:Pos needToSpawn:0)}
+	    NewPlayer={Record.adjoin H player(pos:Pos state:on needToSpawn:0)}
 	    {BroadCast spawnPlayer(ID2 Pos) 0}
 	    {Send Game_Port updatePlayer(NewPlayer)}
 	    {UpdateBomb NewPlayer 0}
@@ -571,7 +571,7 @@ define
 	       {Send PlayerState.port spawn(?ID ?Pos)}
 	       {Wait ID}
 	       {Wait Pos}
-	       NewPlayer={Record.adjoin PlayerState player(pos:Pos needToSpawn:0)}
+	       NewPlayer={Record.adjoin PlayerState player(pos:Pos state:on needToSpawn:0)}
 	       {Send Game_Port updatePlayer(NewPlayer)}
 	       {RunThread NewPlayer}
 	    else
