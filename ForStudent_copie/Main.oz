@@ -593,11 +593,11 @@ define
       else
 	 if({SeeHowManyPlayers GameState 0}==1) then %% Il ne reste qu'un joueur, il gagne
 	    Winner={WhoIsWinner GameState}
-	    {Delay 500}
+	    {Delay 1000}
 	    {Send GUI_Port displayWinner(Winner)}
 	 else
 	    Winner = {HighestScore GameState GameState.1}
-	    {Delay 500}
+	    {Delay 1000}
 	    {Send GUI_Port displayWinner(Winner)}
 	 end
       end
