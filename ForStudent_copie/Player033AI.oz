@@ -26,6 +26,15 @@ define
       end
    end
 
+   fun{Inverse TotalList N N2} NewList in
+      if(N>=N2) then
+	 TotalList
+      else
+	 NewList={Swipe N N2 TotalList}
+	 {Inverse NewList N+1 N2-1}
+      end
+   end
+
    fun{Nth List N Count}
       case List of H|T then
 	 if(Count==N) then
@@ -543,8 +552,8 @@ define
 	 Pos=Etat.spawn
 	 {Record.adjoin Etat etat(pos:Pos state:on)}
       else
-	 ID=nil
-	 Pos=nil
+	 ID=null
+	 Pos=null
 	 {Record.adjoin Etat etat(pos:nil state:off)}
       end
    end
@@ -636,8 +645,8 @@ define
 
    fun{GotHit Etat ID Res}
       if(Etat.state==off) then
-	 ID=nil
-	 Res=nil
+	 ID=null
+	 Res=null
 	 {Record.adjoin Etat etat(bomber:nil)}
       else
 	 ID=Etat.bomber
@@ -670,9 +679,10 @@ define
 	 {Record.adjoin Etat etat(posBomb:Pos|Etat.posBomb)}
       [] bombExploded(Pos)%% Bomb has exploded at <position> Pos
       then
-	 local NewBombList in
-	    NewBombList = {Retire Pos Etat.posBomb}
-	    {Record.adjoin Etat etat(posBomb:NewBombList)}
+	 local NewBombList NewBombList2 in
+	    NewBombList = {Retire Pos {Inverse Etat.posBomb 1 {Length Etat.posBomb 0}}}
+	    NewBombList2 = {Inverse NewBombList 1 {Length NewBombList 0}}
+	    {Record.adjoin Etat etat(posBomb:NewBombList2)}
 	 end
       [] boxRemoved(Pos)
       then

@@ -5,6 +5,7 @@ import
    Player033AI
    Player105Cerbere
    Player033DP
+   Player001name 
 export
    playerGenerator:PlayerGenerator
 define
@@ -15,7 +16,7 @@ in
       of player000bomber then {Player000bomber.portPlayer ID}
       [] player000name then {Player000name.portPlayer ID}
       [] player033AI then {Player033AI.portPlayer ID}
-      [] player105Cerbere then {Player105Cerbere.portPlayer ID}
+      [] player001name then {Player001name.portPlayer ID}
       [] player033DP then {Player033DP.portPlayer ID}
       else
          raise
