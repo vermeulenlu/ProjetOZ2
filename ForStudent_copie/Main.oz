@@ -458,7 +458,7 @@ define
 	    {BroadCast bombPlanted(Pos) 0}
 	    {Send Game_Port bombListChanged(NewBombList)}
 	 end
-      [] nil then skip
+      [] null then skip
       end
    end
 
@@ -632,7 +632,7 @@ in
    GUI_Port = {GUI.portWindow}
    {Send GUI_Port buildWindow}
 %%%%%%%%%%%%%%%%%%%% Initialisation des Bombers %%%%%%%%%%%%%%%%%%%%%%%
-   ListID = {Ids Input.colorsBombers [lucas jerem] 1}
+   ListID = {Ids Input.colorsBombers [lucas jerem m k a t] 1}
    ListBombers = {GenerateBombers Input.bombers ListID}
    Game_Port = {GameState.portGameState ListBombers}
    {Initit ListBombers}

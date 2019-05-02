@@ -416,7 +416,6 @@ define
    end
 
    fun{CheckOneDirection Source Etat Map Pos Xsup Ysup N}
-      {Print'JE SUIS DANS LE OneDIRECTION'}
       local X Y NewPos in
 	 X=Pos.x
 	 Y=Pos.y
@@ -434,7 +433,6 @@ define
    end
 
    fun{BeginBFS Etat Pos Map} NewMap NewPos1 NewPos2 NewPos3 NewPos4 in
-      {Print'JE SUIS DANS LE BFS'}
       NewMap = {ChangePoids Map Pos 1}
       NewPos1={CheckOneDirection pt(x:Pos.x-1 y:Pos.y) Etat NewMap Pos ~1 0 1}
       NewPos2={CheckOneDirection pt(x:Pos.x+1 y:Pos.y) Etat NewMap Pos 1 0 1}
@@ -507,7 +505,6 @@ define
    end
 
    fun{ChangePoids Map Pos Value} ValeurPos in
-      {Print 'J AI '#{Length {List.nth Map Pos.y} 0}#''}
       ValeurPos = {List.nth {List.nth Map Pos.y} Pos.x}.val
       {Replace Map {Replace {List.nth Map Pos.y} node(val:ValeurPos poids:Value) Pos.x 1} Pos.y 1}
    end
@@ -554,7 +551,7 @@ define
 
    fun{Doaction Etat ID Action} NewEtat PosMenace PosMenace Pos NewPos Range2 Sync PosForPoints in
       if(Etat.state==off) then
-	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
+	 NewEtat = {Record.adjoin Etat etat(action:null bomber:null)}
 	 ID=NewEtat.bomber
 	 Action=NewEtat.action
 	 NewEtat

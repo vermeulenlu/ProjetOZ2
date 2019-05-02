@@ -27,7 +27,7 @@ define
 in
 
 
-   IsTurnByTurn = true
+   IsTurnByTurn = false
    UseExtention = false
    PrintOK = true
 
@@ -46,9 +46,9 @@ in
 
 %%%% Players description %%%%
 
-   NbBombers = 2
-   Bombers = [player033AI player033AI]
-   ColorBombers = [red green] %%green = luigi, red = mario, blue = toad et c(255 128 192) = peach
+   NbBombers = 6
+   Bombers = [player033DP player033DP player033DP player033DP player033DP player033DP]
+   ColorBombers = [red green blue white red yellow] %%green = luigi, red = mario, blue = toad et c(255 128 192) = peach
 
 %%%% Parameters %%%%
 
