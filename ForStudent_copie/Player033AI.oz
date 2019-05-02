@@ -26,6 +26,15 @@ define
       end
    end
 
+   fun{Inverse TotalList N N2} NewList in
+      if(N>=N2) then
+	 TotalList
+      else
+	 NewList={Swipe N N2 TotalList}
+	 {Inverse NewList N+1 N2-1}
+      end
+   end
+
    fun{Nth List N Count}
       case List of H|T then
 	 if(Count==N) then
@@ -403,7 +412,7 @@ define
 	       {Smaller NewPos1|NewPos3|NewPos2|NewPos4|nil NewPos1}
 	    end
 	 end
-      end	 
+      end
    end
 
    fun{CheckBFS Etat Map Source Pos N} NewMap in
@@ -482,9 +491,9 @@ define
 	       {Smaller NewPos1|NewPos3|NewPos2|NewPos4|nil NewPos1}
 	    end
 	 end
-      end	 
+      end
    end
-   
+
    fun{Put0 List TotList N} NewList in
       case List of H|T then
 	 NewList={Replace TotList node(val:H poids:0) N 1}
@@ -543,9 +552,9 @@ define
 	       Pos=Etat.spawn
 	       {Record.adjoin Etat etat(pos:Pos state:on)}
       else
-      	 ID=nil
-	       Pos=nil
-	       {Record.adjoin Etat etat(pos:nil state:off)}
+	 ID=null
+	 Pos=null
+	 {Record.adjoin Etat etat(pos:nil state:off)}
       end
    end
 
@@ -560,7 +569,7 @@ define
 	 PosMenace = {Menace Etat Etat.pos}
 	 if(PosMenace==false) then % Je ne suis pas menacé
 	    PosForPoints={LookingForPoints Etat Etat.points Etat.pos}
-	    if(PosForPoints==nil) then %% Je ne dois pas aller chercher des points 
+	    if(PosForPoints==nil) then %% Je ne dois pas aller chercher des points
 	       if(Etat.bomb>0) then % J'ai encore des bombes en reserve
 		  if({CanIEscape Etat Etat.pos}) then % Je regarde si en posant une bombe, je peux m'echapper
 		     if({GoingToDestroy Etat Etat.pos}) then % Je regarde si ma bombe va etre utile
@@ -636,9 +645,9 @@ define
 
    fun{GotHit Etat ID Res}
       if(Etat.state==off) then
-	       ID=nil
-	       Res=nil
-	       {Record.adjoin Etat etat(bomber:nil)}
+	 ID=null
+	 Res=null
+	 {Record.adjoin Etat etat(bomber:nil)}
       else
 	 ID=Etat.bomber
 	 local NewLife NewEtat in
@@ -670,9 +679,10 @@ define
 	 {Record.adjoin Etat etat(posBomb:Pos|Etat.posBomb)}
       [] bombExploded(Pos)%% Bomb has exploded at <position> Pos
       then
-	 local NewBombList in
-	    NewBombList = {Retire Pos Etat.posBomb}
-	    {Record.adjoin Etat etat(posBomb:NewBombList)}
+	 local NewBombList NewBombList2 in
+	    NewBombList = {Retire Pos {Inverse Etat.posBomb 1 {Length Etat.posBomb 0}}}
+	    NewBombList2 = {Inverse NewBombList 1 {Length NewBombList 0}}
+	    {Record.adjoin Etat etat(posBomb:NewBombList2)}
 	 end
       [] boxRemoved(Pos)
       then
@@ -688,8 +698,8 @@ define
 
 %%%%%%%%%%%%%%%%%%%% Fonctions exécutives %%%%%%%%%%%%%%%%%%%%%%%%%%
 in
-   
-   
+
+
    fun{StartPlayer ID}
       Stream
       Port

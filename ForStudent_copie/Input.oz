@@ -47,12 +47,12 @@ in
 %%%% Players description %%%%
 
    NbBombers = 8
-   Bombers = [player082advancedPlayer player033AI playerSmart02 player105Cerbere player082advancedPlayer player033AI playerSmart02 player105Cerbere] %%player082advancedPlayer player033AI player021IA2 player100advanced
+   Bombers = [player082advancedPlayer player033AI playerSmart02 player105Cerbere player082advancedPlayer player033DP playerSmart02 player105Cerbere] %%player082advancedPlayer player033AI player021IA2 player100advanced
    ColorBombers = [red green blue c(255 128 192) red green blue c(255 128 192)]%%green = luigi, red = mario, blue = toad et c(255 128 192) = peach
 
 %%%% Parameters %%%%
 
-   NbLives = 3
+   NbLives = 10
    NbBombs = 1
 
    ThinkMin = 400  % in millisecond
