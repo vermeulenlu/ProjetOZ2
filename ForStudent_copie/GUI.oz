@@ -7,6 +7,7 @@ import
    Print
 export
    portWindow:StartWindow
+   %%window:Window
 define
 
    StartWindow

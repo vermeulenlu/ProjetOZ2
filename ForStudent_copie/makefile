@@ -15,8 +15,8 @@ compile:	compilePlayer PlayerManager.oz GUI.oz GameState.oz Main.oz
 Input.ozf: Input.oz
 	ozc.exe -c Input.oz
 
-compilePlayer:	Player000name.oz Player000AI.oz
-	ozc.exe -c Player000name.oz Player000AI.oz
+compilePlayer:	Player000name.oz Player033AI.oz Player033DP.oz
+	ozc.exe -c Player000name.oz Player033AI.oz Player033DP.oz
 
 *.ozf :
 
@@ -24,6 +24,6 @@ run:	Main.ozf
 	ozengine.exe Main.ozf
 
 clean :
-	rm Input.ozf PlayerManager.ozf GUI.ozf GameState.ozf Player000AI.ozf Player000name.ozf
+	rm Input.ozf PlayerManager.ozf GUI.ozf GameState.ozf Player033AI.ozf Player000name.ozf
 
 # TODO write your makefile here

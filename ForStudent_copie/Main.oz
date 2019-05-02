@@ -429,7 +429,7 @@ define
 	    if({List.nth GameState N}.life>0) then
 	       {MakeAction {List.nth GameState N}}
 	       {Run {RetrieveListLast GameState N 1} N+1}
-	    else 
+	    else
 	       {Run {RetrieveListLast GameState N 1} N+1}
 	    end
 	 else
@@ -443,7 +443,7 @@ define
 	       if({List.nth GameState N}.life>0) then
 		  {MakeAction {List.nth GameState N}}
 		  {Run {RetrieveListLast GameState N 1} N+1}
-	       else 
+	       else
 		  {Run {RetrieveListLast GameState N 1} N+1}
 	       end
 	    end
@@ -554,7 +554,7 @@ in
    GUI_Port = {GUI.portWindow}
    {Send GUI_Port buildWindow}
 %%%%%%%%%%%%%%%%%%%% Initialisation des Bombers %%%%%%%%%%%%%%%%%%%%%%%
-   ListID = {Ids Input.colorsBombers [lucas jerem] 1}
+   ListID = {Ids Input.colorsBombers [mario luigi peach toad] 1}
    ListBombers = {GenerateBombers Input.bombers ListID}
    Game_Port = {GameState.portGameState ListBombers}
    {Initit ListBombers}
