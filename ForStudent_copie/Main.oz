@@ -554,7 +554,7 @@ in
    GUI_Port = {GUI.portWindow}
    {Send GUI_Port buildWindow}
 %%%%%%%%%%%%%%%%%%%% Initialisation des Bombers %%%%%%%%%%%%%%%%%%%%%%%
-   ListID = {Ids Input.colorsBombers [lucas jerem] 1}
+   ListID = {Ids Input.colorsBombers [lucas jerem jean louis] 1}
    ListBombers = {GenerateBombers Input.bombers ListID}
    Game_Port = {GameState.portGameState ListBombers}
    {Initit ListBombers}
