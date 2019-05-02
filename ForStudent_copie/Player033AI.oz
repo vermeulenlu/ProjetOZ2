@@ -170,7 +170,7 @@ define
 	 end
       end
    end
-      
+
    fun{GoingToDestroy Etat Pos} Bool1 Bool2 Bool3 Bool4 in
       Bool1={CheckBox Etat Pos 1 0 Input.fire}
       Bool2={CheckBox Etat Pos ~1 0 Input.fire}
@@ -304,7 +304,7 @@ define
 	 {Append {Append {Append {Append {Append {CheckRange Etat H.x H.y 0 1} {CheckRange Etat H.x H.y 0 ~1}} {CheckRange Etat H.x H.y 1 0}} {CheckRange Etat H.x H.y ~1 0}} [pt(x:H.x y:H.y)]} {Range Etat T}}
       [] nil then nil
       end
-   end	 
+   end
 
    fun{Bomb Etat Pos}
       {Record.adjoin Etat etat(bomb:Etat.bomb-1)}
@@ -342,10 +342,10 @@ in
 
    fun{Doaction Etat ID Action} NewEtat PosMenace PosMenace Pos NewPos Range2 Sync in
       if(Etat.state==off) then
-	 NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
-	 ID=NewEtat.bomber
-	 Action=NewEtat.action
-	 NewEtat
+	       NewEtat = {Record.adjoin Etat etat(action:nil bomber:nil)}
+	       ID=NewEtat.bomber
+	       Action=NewEtat.action
+	       NewEtat
       else
 	 ID = Etat.bomber
 	 PosMenace = {Menace Etat Etat.pos}

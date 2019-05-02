@@ -7,16 +7,16 @@ import
 export
    portWindow:StartWindow
 define
-   
+
    StartWindow
    TreatStream
 
-   InitPlayer  
-   
+   InitPlayer
+
    UpdateValue
 
    BuildWindow
-   
+
    Squares
    Items
    DrawMap
@@ -42,7 +42,7 @@ in
       DescLife=grid(handle:GridLife height:100 width:50*Input.nbBombers)
       DescScore=grid(handle:GridScore height:100 width:50*Input.nbBombers)
       Window={QTk.build td(Toolbar Desc DescLife DescScore)}
-  
+
       {Window show}
 
       % configure rows and set headers
@@ -67,13 +67,13 @@ in
       for N in 1..(Input.nbBombers) do
 	 {GridScore columnconfigure(N+1 minsize:50 weight:0 pad:5)}
       end
-      
+
       {DrawMap Grid}
       GridItems = {PrepareMap Grid}
       handle(grid:Grid items:GridItems life:GridLife score:GridScore)
    end
 
-   
+
 %%%%% Squares of path and wall
    Squares = square(0:label(text:"" width:1 height:1 bg:c(0 0 204))
 		    1:label(text:"" borderwidth:5 relief:raised width:1 height:1 bg:c(0 0 0))
@@ -81,14 +81,14 @@ in
 		    3:label(text:"" width:1 height:1 bg:c(0 0 204))
 		    4:label(text:"" width:1 height:1 bg:c(0 150 150))
 		   )
-   Items = items(boxpoint:fun{$ Handle} label(text:"" borderwidth:2 relief:raised width:3 height:2 bg:c(139 69 19) handle:Handle) end 
-		 boxbonus:fun{$ Handle} label(text:"" borderwidth:2 relief:raised width:3 height:2 bg:c(210 105 30) handle:Handle) end 
-		 point:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:white) end 
-		 bonus:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:green) end 
-		 bomb:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:black) end 
-		 fire:fun{$ Handle} label(text:"" height:1 width:2 handle:Handle bg:red) end 
+   Items = items(boxpoint:fun{$ Handle} label(text:"" borderwidth:2 relief:raised width:3 height:2 bg:c(139 69 19) handle:Handle) end
+		 boxbonus:fun{$ Handle} label(text:"" borderwidth:2 relief:raised width:3 height:2 bg:c(210 105 30) handle:Handle) end
+		 point:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:white) end
+		 bonus:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:green) end
+		 bomb:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:black) end
+		 fire:fun{$ Handle} label(text:"" height:1 width:2 handle:Handle bg:red) end
 		)
-   
+
 %%%%% Function to draw the map
    proc{DrawMap Grid}
       proc{DrawColumn Column M N}
@@ -115,14 +115,14 @@ in
       Res
       proc{CreateRemove Label Row Col Remove}
          {GridHandle configure(Label row:Row column:Col)}
-         if (Remove) then 
+         if (Remove) then
             {GridHandle remove(Label.handle)}
          else
             {Label.handle 'raise'()}
          end
       end
       proc{PrepareColumn Column M N}
-         case Column 
+         case Column
          of nil then skip
          [] 0|End then BombH FireH in
 	    {CreateRemove {Items.bomb BombH} M N true}
@@ -157,13 +157,13 @@ in
 	 case Row
 	 of nil then skip
 	 [] T|End then
-            Res.M = {Tuple.make items Input.nbColumn} 
+            Res.M = {Tuple.make items Input.nbColumn}
 	    {PrepareColumn T M 1}
             {PrepareRow End M+1}
 	 end
       end
    in
-      Res = {Tuple.make items Input.nbRow} 
+      Res = {Tuple.make items Input.nbRow}
       {PrepareRow Input.map 1}
       Res
    end
@@ -191,16 +191,17 @@ in
 
    proc{ApplyTo Grid Pos Label Fun}
       Row Col Square
-   in 
+   in
       Pos = pt(x:Col y:Row)
       Square = Grid.items.Row.Col.Label
       if (Square \= null) then
          {Fun Grid Square Row Col}
       end
    end
+
    proc{ApplyToHandle Grid Handle Pos Fun}
       Row Col
-   in 
+   in
       Pos = pt(x:Col y:Row)
       {Fun Grid Handle Row Col}
    end
@@ -219,8 +220,8 @@ in
       {Hide Grid Handle Row Col}
       {Spawn Grid Handle Row Col}
    end
-   
-   
+
+
    fun{StateModification Grid Wanted State Fun}
       case State
       of nil then nil
@@ -255,8 +256,8 @@ in
       case Stream
       of nil then skip
       [] H|T then
-         case H 
-         of buildWindow then NewGrid in 
+         case H
+         of buildWindow then NewGrid in
 	    NewGrid = {BuildWindow}
 	    {TreatStream T NewGrid {Tuple.make players Input.nbBombers}}
          [] initPlayer(ID) then
@@ -312,8 +313,8 @@ in
          end
       end
    end
-   
-  
 
-   
+
+
+
 end
