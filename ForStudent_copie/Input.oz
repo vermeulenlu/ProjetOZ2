@@ -27,7 +27,7 @@ define
 in
 
 
-   IsTurnByTurn = false
+   IsTurnByTurn = true
    UseExtention = false
    PrintOK = true
 
@@ -47,12 +47,12 @@ in
 %%%% Players description %%%%
 
    NbBombers = 4
-   Bombers = [player033DP player033DP player033AI player033AI]
+   Bombers = [player033DP player033AI player000name player000bomber]
    ColorBombers = [red green white yellow] %%green = luigi, red = mario, blue = toad et c(255 128 192) = peach
 
 %%%% Parameters %%%%
 
-   NbLives = 10
+   NbLives = 3
    NbBombs = 1
 
    ThinkMin = 400  % in millisecond
