@@ -28,6 +28,7 @@ in
       [] player100advanced then {Player100advanced.portPlayer ID}
       [] playerSmart02 then {PlayerSmart02.portPlayer ID}
       [] player021IA2 then {Player021IA2.portPlayer ID}
+      [] player105Cerbere then {Player105Cerbere.portPlayer ID}
       else
          raise
             unknownedPlayer('Player not recognized by the PlayerManager '#Kind)
