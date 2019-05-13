@@ -65,7 +65,11 @@ in
       % configure scoreboard
       {GridScore rowconfigure(1 minsize:50 weight:0 pad:5)}
       {GridScore columnconfigure(1 minsize:50 weight:0 pad:5)}
-      {GridScore configure(label(text:"Coins" width:1 height:1) row:1 column:1 sticky:wesn)}
+      if(Input.guiOpt) then
+        {GridScore configure(label(text:"Coins" width:1 height:1) row:1 column:1 sticky:wesn)}
+      else
+        {GridScore configure(label(text:"Points" width:1 height:1) row:1 column:1 sticky:wesn)}
+      end
       for N in 1..(Input.nbBombers) do
 	 {GridScore columnconfigure(N+1 minsize:50 weight:0 pad:5)}
       end
@@ -77,28 +81,36 @@ in
 
 
 %%%%% Squares of path and wall
-   Squares = square(0:label(text:"" width:1 height:1 bg:c(255 255 255))
-        %%square(0:label(text:"" width:1 height:1 bg:c(0 0 204))
-		    1:label(text:"" width:1 height:1 image:{QTk.newImage photo(file:'Images/goodWall.gif')} borderwidth:0)
-        %%label(text:"" borderwidth:5 relief:raised width:1 height:1 bg:c(0 0 0))
-		    2:label(text:"" width:1 height:1 bg:c(255 255 255))
-        %%label(text:"" width:1 height:1 bg:c(0 0 204))
-		    3:label(text:"" width:1 height:1 bg:c(255 255 255))
-        %%label(text:"" width:1 height:1 bg:c(0 0 204))
-		    4:label(text:"" image:{QTk.newImage photo(file:'Images/goodSpawn.gif')} width:1 height:1  borderwidth:0)
-        %%label(text:"" width:1 height:1 bg:c(0 150 150))
-		   )
-   Items = items(boxpoint: fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/mysterybox.gif')} handle:Handle borderwidth:0) end
-     %%fun{$ Handle} label(text:"" borderwidth:2 relief:raised width:3 height:2 handle:Handle bg:c(139 69 19)) end
-		 boxbonus: fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/mysterybox.gif')} handle:Handle borderwidth:0) end
-     %%fun{$ Handle}  label(text:"" borderwidth:2 relief:raised width:3 height:2 handle:Handle bg:c(210 105 30)) end
-		 point: fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/point.gif')} handle:Handle borderwidth:0) end
-     %%fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:white) end
-		 bonus: fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/bonus.gif')} handle:Handle borderwidth:0) end
-     %%fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:green) end
-		 bomb:fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/goodBombe.gif')} handle:Handle borderwidth:0 ) end
-		 fire:fun{$ Handle} label(text:"" height:1 width:2 handle:Handle bg:red) end
-		)
+  if (Input.guiOpt) then
+    Squares = square(0:label(text:"" width:1 height:1 bg:c(255 255 255))
+                     1:label(text:"" width:1 height:1 image:{QTk.newImage photo(file:'Images/goodWall.gif')} borderwidth:0)
+                     2:label(text:"" width:1 height:1 bg:c(255 255 255))
+                     3:label(text:"" width:1 height:1 bg:c(255 255 255))
+                     4:label(text:"" image:{QTk.newImage photo(file:'Images/goodSpawn.gif')} width:1 height:1  borderwidth:0)
+                     )
+    Items = items(boxpoint: fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/mysterybox.gif')} handle:Handle borderwidth:0) end
+                  boxbonus: fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/mysterybox.gif')} handle:Handle borderwidth:0) end
+                  point: fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/point.gif')} handle:Handle borderwidth:0) end
+                  bonus: fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/bonus.gif')} handle:Handle borderwidth:0) end
+                  bomb:fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/goodBombe.gif')} handle:Handle borderwidth:0 ) end
+                  fire:fun{$ Handle} label(text:"" image:{QTk.newImage photo(file:'Images/feu.gif')} handle:Handle borderwidth:0 ) end
+                  )
+  else
+    Squares = square(0:label(text:"" width:1 height:1 bg:c(0 0 204))
+                     1:label(text:"" borderwidth:5 relief:raised width:1 height:1 bg:c(0 0 0))
+                     2:label(text:"" width:1 height:1 bg:c(0 0 204))
+                     3:label(text:"" width:1 height:1 bg:c(0 0 204))
+                     4:label(text:"" width:1 height:1 bg:c(0 150 150))
+                     )
+    Items = items(boxpoint:fun{$ Handle} label(text:"" borderwidth:2 relief:raised width:3 height:2 handle:Handle bg:c(139 69 19)) end
+                  boxbonus:fun{$ Handle}  label(text:"" borderwidth:2 relief:raised width:3 height:2 handle:Handle bg:c(210 105 30)) end
+                  point:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:white) end
+                  bonus:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:green) end
+                  bomb:fun{$ Handle} label(text:"" height:1 width:1 handle:Handle bg:black) end
+                  fire:fun{$ Handle} label(text:"" height:1 width:2 handle:Handle bg:red) end
+                  )
+  end
+
 
 %%%%% Function to draw the map
    proc{DrawMap Grid}
@@ -183,20 +195,23 @@ in
       Handle HandleLife HandleScore Id Color LabelPlayer LabelLife LabelScore
    in
       bomber(id:Id color:Color name:_) = ID
-
-      if(Color == red) then
-        LabelPlayer = label(text:"" handle:Handle borderwidth:0  height:1 width:1 image:{QTk.newImage photo(file:'Images/Mario.gif')})
-      elseif(Color==c(255 128 192)) then
-        LabelPlayer = label(text:"" handle:Handle borderwidth:0  height:1 width:1 image:{QTk.newImage photo(file:'Images/Peach.gif')})
-      elseif(Color==green) then
-        LabelPlayer = label(text:"" handle:Handle borderwidth:0  height:1 width:1 image:{QTk.newImage photo(file:'Images/Luigi.gif')})
-      elseif(Color==blue) then
-        LabelPlayer = label(text:"" handle:Handle borderwidth:0  height:1 width:1 image:{QTk.newImage photo(file:'Images/Toad.gif')})
+      if (Input.guiOpt) then
+          if(Color == red) then
+            LabelPlayer = label(text:"" handle:Handle borderwidth:0  height:1 width:1 image:{QTk.newImage photo(file:'Images/Mario.gif')})
+          elseif(Color==c(255 128 192)) then
+            LabelPlayer = label(text:"" handle:Handle borderwidth:0  height:1 width:1 image:{QTk.newImage photo(file:'Images/Peach.gif')})
+          elseif(Color==green) then
+            LabelPlayer = label(text:"" handle:Handle borderwidth:0  height:1 width:1 image:{QTk.newImage photo(file:'Images/Luigi.gif')})
+          elseif(Color==blue) then
+            LabelPlayer = label(text:"" handle:Handle borderwidth:0  height:1 width:1 image:{QTk.newImage photo(file:'Images/Toad.gif')})
+          elseif(Color==yellow) then
+            LabelPlayer = label(text:"" handle:Handle borderwidth:0  height:1 width:1 image:{QTk.newImage photo(file:'Images/Wario.gif')})
+          else
+            LabelPlayer = label(text:"P" handle:Handle borderwidth:5 relief:raised bg:Color ipadx:5 ipady:5)
+          end
       else
-        {Browser.browse color#Color}
         LabelPlayer = label(text:"P" handle:Handle borderwidth:5 relief:raised bg:Color ipadx:5 ipady:5)
       end
-
       LabelLife = label(text:Input.nbLives borderwidth:5 handle:HandleLife relief:solid bg:Color ipadx:5 ipady:5)
       LabelScore = label(text:0 borderwidth:5 handle:HandleScore relief:solid bg:Color ipadx:5 ipady:5)
       {Grid.grid configure(LabelPlayer row:0 column:0 sticky:wesn)}

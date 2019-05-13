@@ -24,6 +24,6 @@ run:	Main.ozf
 	ozengine.exe Main.ozf
 
 clean :
-	rm Input.ozf PlayerManager.ozf GUI.ozf GameState.ozf Player033AI.ozf Player033name.ozf
+	rm Input.ozf PlayerManager.ozf GUI.ozf GameState.ozf Player033AI.ozf Player033name.ozf Player033DP.ozf
 
 # TODO write your makefile here

@@ -633,7 +633,15 @@ in
    {Send GUI_Port buildWindow}
 %%%%%%%%%%%%%%%%%%%% Initialisation des Bombers %%%%%%%%%%%%%%%%%%%%%%%
 
-   ListID = {Ids Input.colorsBombers [mario luigi toad peach] 1}
+  if (Input.nbBombers == 2) then
+    ListID = {Ids Input.colorsBombers [mario luigi] 1}
+
+  elseif(Input.nbBombers == 5) then
+    ListID = {Ids Input.colorsBombers [mario luigi peach toad wario] 1}
+  elseif(Input.nbBombers == 10) then  
+    ListID = {Ids Input.colorsBombers [mario mario luigi luigi peach peach toad toad wario wario] 1}
+  end
+
 
    ListBombers = {GenerateBombers Input.bombers ListID}
    Game_Port = {GameState.portGameState ListBombers}
